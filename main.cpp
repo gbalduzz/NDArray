@@ -17,8 +17,8 @@ std::ostream& operator<<(std::ostream& s, const std::array<T, n>& v) {
 
 int main() {
   using namespace nd;
-  NDArray<int, 3> arr(5, 5, 5);
-  auto arr2 = arr(range{2, end}, 2, all);
+  NDArray<int, 4> arr(5, 5, 5, 10);
+  auto arr2 = arr(range{2, end}, 2, all, 0);
 
   std::cout << arr2.shape() << std::endl;
 
@@ -28,7 +28,9 @@ int main() {
   NDArray<int, 2> m2(2, 2);
   m2 = 2;
 
-  m(0, all) = m2(0, all);
+  m(0, all) = m2(all, 0);
+
+  m(all, 1) = 3;
 
   std::cout << m << std::endl;
 }

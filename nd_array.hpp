@@ -11,8 +11,8 @@ class NDArray {
 public:
   constexpr static std::size_t dimensions = dims;
 
-  template <class... Ints> requires is_complete_index<dims, Ints...>
-  NDArray(Ints... ns) : view_{ns...} {
+  template <class... Ints>
+  requires is_complete_index<dims, Ints...> NDArray(Ints... ns) : view_{ns...} {
     data_.resize((ns * ...), 0);
     view_.data_ = data_.data();
   }
@@ -68,13 +68,15 @@ public:
   requires is_complete_index<dims, Ints...> T& operator()(Ints... ns) noexcept {
     return view_(ns...);
   }
-  T& operator()(const std::array<std::size_t, dims>& ns) noexcept {
-    return view_(ns);
+
+  template <class... Args>
+  auto operator()(Args&&... ns) noexcept {
+    return view_(std::forward<Args>(ns)...);
   }
 
-  template <class... Args> requires is_partial_index<dims, Args...>
-  auto operator()(Args... ns) noexcept {
-    return view_(ns...);
+  template <class... Args>
+  const auto operator()(Args&&... ns) const noexcept {
+    return view_(std::forward<Args>(ns)...);
   }
 
   operator NDView<T, dims>() noexcept {
