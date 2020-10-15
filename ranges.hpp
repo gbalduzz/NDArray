@@ -5,9 +5,9 @@
 
 namespace nd {
 
-struct range {
+struct range { // [start, end)
   std::size_t start;
-  std::size_t end;  // inclusive
+  std::size_t end;
 };
 
 constexpr std::size_t end = -1;
@@ -33,8 +33,8 @@ std::size_t getStart(I i) {
 }
 
 std::size_t getSpan(const range& r, const std::size_t tot_size) {
-  assert(r.end == end || (r.end >= r.start && r.end < tot_size));
-  return r.end == end? tot_size - r.start : r.end - r.start + 1;
+  assert(r.end == end || (r.end >= r.start && r.end <= tot_size));
+  return r.end == end? tot_size - r.start : r.end - r.start;
 }
 
 template <std::integral I>
