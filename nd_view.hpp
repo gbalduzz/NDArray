@@ -83,8 +83,6 @@ public:
     return slice;
   }
 
-
-
   template <class... Args> requires is_partial_index<dims, Args...>
   auto operator()(Args... args) const {
     auto nonconst_view = (*const_cast<NDView<T, dims>*>(this))(args...);
@@ -109,11 +107,12 @@ private:
          const std::array<std::size_t, dims>& strides) :
       data_(data), shape_(shape), strides_(strides){}
 
-  template <class... Ints>
-  requires is_complete_index<dims, Ints...> NDView(Ints... ns) : shape_{std::size_t(ns)...} {
-    strides_[0] = 1;
-    for (int i = 1; i < dims; ++i)
-      strides_[i] = strides_[i - 1] * shape_[i - 1];
+  template <class... Ints> requires is_complete_index<dims, Ints...>
+  NDView(Ints... ns) : shape_{std::size_t(ns)...} {
+    // row-major
+    strides_.back() = 1;
+    for (int i = dimensions - 2; i >= 0; --i)
+      strides_[i] = strides_[i + 1] * shape_[i + 1];
   }
 
   template <class... Ints>

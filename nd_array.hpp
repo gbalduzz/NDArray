@@ -11,8 +11,8 @@ class NDArray {
 public:
   constexpr static std::size_t dimensions = dims;
 
-  template <class... Ints>
-  requires is_complete_index<dims, Ints...> NDArray(Ints... ns) : view_{ns...} {
+  template <class... Ints> requires is_complete_index<dims, Ints...>
+  NDArray(Ints... ns) : view_{ns...} {
     data_.resize((ns * ...), 0);
     view_.data_ = data_.data();
   }
