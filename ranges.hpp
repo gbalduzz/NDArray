@@ -17,6 +17,9 @@ template <std::size_t N, class... Args>
 constexpr bool is_index_pack = sizeof...(Args) == N && (std::is_integral_v<Args> && ...);
 
 template <std::size_t N, class... Args>
+constexpr bool is_partial_index = sizeof...(Args) < N && (std::is_integral_v<Args> && ...);
+
+template <std::size_t N, class... Args>
 constexpr bool is_range = !is_index_pack<N, Args...> && sizeof...(Args) == N &&
                           ((std::is_integral_v<Args> || std::is_same_v<Args, range>)&&...);
 

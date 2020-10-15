@@ -45,7 +45,7 @@ void broadcast(F&& f, View1&& view1, Views&&... views) {
   constexpr std::size_t dims = std::decay_t<View1>::dimensions;
 
   static_assert(((dims == std::decay_t<Views>::dimensions) && ...),
-                "Number of dimension mismatch in broadcast operation");
+                "Number of dimensions mismatch in broadcast operation");
   assert(((view1.shape() == views.shape()) && ...));
 
   Iterate<0, dims>::execute(std::forward<F>(f), std::forward<View1>(view1),

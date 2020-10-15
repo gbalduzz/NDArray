@@ -30,9 +30,5 @@ int main() {
 
   m(0, all) = m2(0, all);
 
-  for (int i = 0; i < 2; ++i) {
-    for (int j = 0; j < 2; ++j)
-      std::cout << m(i, j) << " ";
-    std::cout << std::endl;
-  }
+  std::cout << m << std::endl;
 }

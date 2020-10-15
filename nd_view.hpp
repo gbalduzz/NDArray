@@ -27,8 +27,6 @@ public:
     return *this;
   }
 
-  NDView& operator=(NDView&& rhs) = default;
-
   std::size_t length() const noexcept {
     return std::accumulate(shape_.begin(), shape_.end(), 1ul, std::multiplies<std::size_t>());
   }
@@ -76,6 +74,32 @@ public:
     return slice;
   }
 
+  template <class... Args>
+  requires is_partial_index<dims, Args...> auto operator()(Args... args) {
+    NDView<T, dims - sizeof...(Args)> slice;
+
+    const auto start = linindex(args...);
+    slice.data_ = data_ + start;
+
+    unsigned target_d = 0;
+    for (unsigned local_d = sizeof...(Args); local_d < dimensions; ++local_d) {
+      slice.shape_[target_d] = shape_[local_d];
+      slice.strides_[target_d] = strides_[local_d];
+      ++target_d;
+    }
+    return slice;
+  }
+
+  template <class... Args> requires is_partial_index<dims, Args...>
+  NDView<const T, dims - sizeof...(Args)> operator()(Args... args) const {
+    return (*const_cast<NDView<T, dims>*>(this))(args...);
+  }
+
+  operator NDView<const T, dims>() const noexcept {
+    NDView<const T, dims> const_view(data_, shape_, strides_);
+    return const_view;
+  }
+
 private:
   template <class T2, std::size_t n2>
   friend class NDView;
@@ -83,6 +107,9 @@ private:
   friend class NDArray;
 
   NDView() = default;
+  NDView(T* data, const std::array<std::size_t, dims>& shape,
+         const std::array<std::size_t, dims>& strides) :
+      data_(data), shape_(shape), strides_(strides){}
 
   template <class... Ints>
   requires is_index_pack<dims, Ints...> NDView(Ints... ns) : shape_{std::size_t(ns)...} {
@@ -92,7 +119,8 @@ private:
   }
 
   template <class... Ints>
-  requires is_index_pack<dims, Ints...> std::size_t linindex(Ints... ids) const noexcept {
+  requires is_index_pack<dims, Ints...> ||
+           is_partial_index<dims, Ints...> std::size_t linindex(Ints... ids) const noexcept {
     std::size_t lid = 0;
     unsigned i = 0;
     (..., (lid += ids * strides_[i++]));
@@ -124,5 +152,17 @@ private:
   std::array<std::size_t, dims> shape_;
   std::array<std::size_t, dims> strides_;
 };
+
+template <class T, std::size_t n>
+std::ostream& operator<<(std::ostream& s, const NDView<T, n>& view) {
+  s << '[';
+  for (std::size_t i = 0; i < view.shape()[0]; ++i) {
+    const auto slice = view(i);
+    s << slice;
+    if (i < view.shape()[0] - 1)
+      s << ", ";
+  }
+  return s << ']';
+}
 
 }  // namespace nd
