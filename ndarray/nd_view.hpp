@@ -1,8 +1,9 @@
 #pragma once
 
 #include <array>
-#include <numeric>
 #include <cassert>
+#include <ostream>
+#include <numeric>
 
 #include "broadcast.hpp"
 #include "ranges.hpp"

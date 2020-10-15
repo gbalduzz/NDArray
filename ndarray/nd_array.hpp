@@ -56,19 +56,6 @@ public:
     return data_[idx];
   }
 
-  template <class... Ints>
-  requires is_complete_index<dims, Ints...> const T& operator()(Ints... ns) const noexcept {
-    return view_(ns...);
-  }
-  const T& operator()(const std::array<std::size_t, dims>& ns) const noexcept {
-    return view_(ns);
-  }
-
-  template <class... Ints>
-  requires is_complete_index<dims, Ints...> T& operator()(Ints... ns) noexcept {
-    return view_(ns...);
-  }
-
   template <class... Args>
   auto operator()(Args&&... ns) noexcept {
     return view_(std::forward<Args>(ns)...);
