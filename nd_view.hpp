@@ -4,6 +4,7 @@
 #include <numeric>
 #include <cassert>
 
+#include "broadcast.hpp"
 #include "ranges.hpp"
 
 namespace nd {
@@ -11,6 +12,13 @@ namespace nd {
 template <class T, std::size_t dims>
 class NDView {
 public:
+  constexpr static std::size_t dimensions = dims;
+
+  NDView& operator=(const NDView& rhs) {
+    broadcast((*this), rhs, [](int& a, int b) { a = b; });
+    return *this;
+  }
+
   std::size_t length() const noexcept {
     return std::accumulate(shape_.begin(), shape_.end(), 1ul, std::multiplies<std::size_t>());
   }
@@ -29,8 +37,8 @@ public:
     return data_[linindex(ns...)];
   }
 
-  template <class... Args> requires is_range<dims, Args...>
-  auto operator()(Args... args) {
+  template <class... Args>
+  requires is_range<dims, Args...> auto operator()(Args... args) {
     NDView<T, range_count<Args...>> slice;
     const auto start = linindex(getStart(args)...);
     slice.data_ = data_ + start;
@@ -60,15 +68,15 @@ private:
 
   NDView() = default;
 
-  template <class... Ints> requires is_index_pack<dims, Ints...>
-  NDView(Ints... ns) : shape_{std::size_t(ns)...} {
+  template <class... Ints>
+  requires is_index_pack<dims, Ints...> NDView(Ints... ns) : shape_{std::size_t(ns)...} {
     strides_[0] = 1;
     for (int i = 1; i < dims; ++i)
       strides_[i] = strides_[i - 1] * shape_[i - 1];
   }
 
-  template <class... Ints> requires is_index_pack<dims, Ints...>
-  std::size_t linindex(Ints... ids) const noexcept {
+  template <class... Ints>
+  requires is_index_pack<dims, Ints...> std::size_t linindex(Ints... ids) const noexcept {
     std::size_t lid = 0;
     unsigned i = 0;
     (..., (lid += ids * strides_[i++]));
