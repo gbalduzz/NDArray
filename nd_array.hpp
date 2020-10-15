@@ -11,8 +11,8 @@ class NDArray {
 public:
   constexpr static std::size_t dimensions = dims;
 
-  template <class... Ints>
-  requires is_index_pack<dims, Ints...> NDArray(Ints... ns) : view_{ns...} {
+  template <class... Ints> requires is_complete_index<dims, Ints...>
+  NDArray(Ints... ns) : view_{ns...} {
     data_.resize((ns * ...), 0);
     view_.data_ = data_.data();
   }
@@ -57,7 +57,7 @@ public:
   }
 
   template <class... Ints>
-  requires is_index_pack<dims, Ints...> const T& operator()(Ints... ns) const noexcept {
+  requires is_complete_index<dims, Ints...> const T& operator()(Ints... ns) const noexcept {
     return view_(ns...);
   }
   const T& operator()(const std::array<std::size_t, dims>& ns) const noexcept {
@@ -65,15 +65,15 @@ public:
   }
 
   template <class... Ints>
-  requires is_index_pack<dims, Ints...> T& operator()(Ints... ns) noexcept {
+  requires is_complete_index<dims, Ints...> T& operator()(Ints... ns) noexcept {
     return view_(ns...);
   }
   T& operator()(const std::array<std::size_t, dims>& ns) noexcept {
     return view_(ns);
   }
 
-  template <class... Args>
-  requires is_range<dims, Args...> auto operator()(Args... ns) noexcept {
+  template <class... Args> requires is_partial_index<dims, Args...>
+  auto operator()(Args... ns) noexcept {
     return view_(ns...);
   }
 
@@ -90,9 +90,9 @@ private:
   std::vector<T> data_;
 };
 
-template <class T, std::size_t n>
-std::ostream& operator<<(std::ostream& s, const NDArray<T, n>& arr) {
-  return s << static_cast<NDView<const T, n>>(arr);
-}
-
 }  // namespace nd
+
+template <class T, std::size_t n>
+std::ostream& operator<<(std::ostream& s, const nd::NDArray<T, n>& arr) {
+  return s << static_cast<nd::NDView<const T, n>>(arr);
+}

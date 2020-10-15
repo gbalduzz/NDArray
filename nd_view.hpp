@@ -35,25 +35,25 @@ public:
     return shape_;
   }
 
-  template <class... Ints>
-  requires is_index_pack<dims, Ints...> const T& operator()(Ints... ns) const noexcept {
+  template <class... Ints> requires is_complete_index<dims, Ints...>
+  const T& operator()(Ints... ns) const noexcept {
     return data_[linindex(ns...)];
   }
   const T& operator()(const std::array<std::size_t, dims>& ns) const noexcept {
     return data_[linindex(ns)];
   }
 
-  template <class... Ints>
-  requires is_index_pack<dims, Ints...> T& operator()(Ints... ns) noexcept {
+  template <class... Ints> requires is_complete_index<dims, Ints...>
+  T& operator()(Ints... ns) noexcept {
     return data_[linindex(ns...)];
   }
   T& operator()(const std::array<std::size_t, dims>& ns) noexcept {
     return data_[linindex(ns)];
   }
 
-  template <class... Args>
-  requires is_range<dims, Args...> auto operator()(Args... args) {
-    NDView<T, range_count<Args...>> slice;
+  template <class... Args> requires is_partial_index<dims, Args...>
+  auto operator()(Args... args) {
+    NDView<T, free_dimensions<dims, Args...>> slice;
     const auto start = linindex(getStart(args)...);
     slice.data_ = data_ + start;
 
@@ -61,7 +61,8 @@ public:
     std::array<std::size_t, sizeof...(Args)> spans{getSpan(args, shape_[i++])...};
 
     unsigned target_d = 0;
-    for (unsigned local_d = 0; local_d < spans.size(); ++local_d) {
+    unsigned local_d = 0;
+    for (; local_d < spans.size(); ++local_d) {
       if (spans[local_d]) {
         slice.shape_[target_d] = spans[local_d];
         slice.strides_[target_d] = strides_[local_d];
@@ -69,30 +70,27 @@ public:
       }
     }
 
+    // Fill missing dimensions with complete range
+    for(; local_d < dimensions; ++local_d){
+      slice.shape_[target_d] = shape_[local_d];
+      slice.strides_[target_d] = strides_[local_d];
+      ++target_d;
+    }
+
+
     // TODO: debug check slice.
 
     return slice;
   }
 
-  template <class... Args>
-  requires is_partial_index<dims, Args...> auto operator()(Args... args) {
-    NDView<T, dims - sizeof...(Args)> slice;
 
-    const auto start = linindex(args...);
-    slice.data_ = data_ + start;
-
-    unsigned target_d = 0;
-    for (unsigned local_d = sizeof...(Args); local_d < dimensions; ++local_d) {
-      slice.shape_[target_d] = shape_[local_d];
-      slice.strides_[target_d] = strides_[local_d];
-      ++target_d;
-    }
-    return slice;
-  }
 
   template <class... Args> requires is_partial_index<dims, Args...>
-  NDView<const T, dims - sizeof...(Args)> operator()(Args... args) const {
-    return (*const_cast<NDView<T, dims>*>(this))(args...);
+  auto operator()(Args... args) const {
+    auto nonconst_view = (*const_cast<NDView<T, dims>*>(this))(args...);
+
+    constexpr std::size_t new_dims = free_dimensions<dims, Args...>;
+    return static_cast<NDView<const T, new_dims>>(nonconst_view);
   }
 
   operator NDView<const T, dims>() const noexcept {
@@ -112,14 +110,14 @@ private:
       data_(data), shape_(shape), strides_(strides){}
 
   template <class... Ints>
-  requires is_index_pack<dims, Ints...> NDView(Ints... ns) : shape_{std::size_t(ns)...} {
+  requires is_complete_index<dims, Ints...> NDView(Ints... ns) : shape_{std::size_t(ns)...} {
     strides_[0] = 1;
     for (int i = 1; i < dims; ++i)
       strides_[i] = strides_[i - 1] * shape_[i - 1];
   }
 
   template <class... Ints>
-  requires is_index_pack<dims, Ints...> ||
+  requires is_complete_index<dims, Ints...> ||
            is_partial_index<dims, Ints...> std::size_t linindex(Ints... ids) const noexcept {
     std::size_t lid = 0;
     unsigned i = 0;
@@ -153,8 +151,10 @@ private:
   std::array<std::size_t, dims> strides_;
 };
 
+}  // namespace nd
+
 template <class T, std::size_t n>
-std::ostream& operator<<(std::ostream& s, const NDView<T, n>& view) {
+std::ostream& operator<<(std::ostream& s, const nd::NDView<T, n>& view) {
   s << '[';
   for (std::size_t i = 0; i < view.shape()[0]; ++i) {
     const auto slice = view(i);
@@ -164,5 +164,3 @@ std::ostream& operator<<(std::ostream& s, const NDView<T, n>& view) {
   }
   return s << ']';
 }
-
-}  // namespace nd
