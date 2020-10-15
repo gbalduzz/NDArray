@@ -56,13 +56,32 @@ public:
     return data_[idx];
   }
 
+  // Return reference to value
+  template <class... Args> requires is_complete_index<dims, Args...>
+  T& operator()(Args&&... ns) noexcept {
+    return view_(std::forward<Args>(ns)...);
+  }
+  template <class... Args> requires is_complete_index<dims, Args...>
+  const T& operator()(Args&&... ns) const noexcept {
+    return view_(std::forward<Args>(ns)...);
+  }
+
+  // TODO: remove
+  T& operator()(const std::array<std::size_t, dims>& ns) noexcept {
+    return view_(ns);
+  }
+  const T& operator()(const std::array<std::size_t, dims>& ns) const noexcept {
+    return view_(ns);
+  }
+
+
+  // Return views.
   template <class... Args>
   auto operator()(Args&&... ns) noexcept {
     return view_(std::forward<Args>(ns)...);
   }
-
   template <class... Args>
-  const auto operator()(Args&&... ns) const noexcept {
+  auto operator()(Args&&... ns) const noexcept {
     return view_(std::forward<Args>(ns)...);
   }
 

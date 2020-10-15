@@ -33,7 +33,7 @@ struct Iterate<0, dims> {
 template <std::size_t dims>
 struct Iterate<dims, dims> {
   template <class F, class... Views>
-  static void execute(std::array<std::size_t, dims>& index, F&& f, Views&&... views) {
+  static void execute(const std::array<std::size_t, dims>& index, F&& f, Views&&... views) {
     std::forward<F>(f)(std::forward<Views>(views)(index)...);
   }
 };
