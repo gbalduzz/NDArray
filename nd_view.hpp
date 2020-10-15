@@ -14,10 +14,20 @@ class NDView {
 public:
   constexpr static std::size_t dimensions = dims;
 
-  NDView& operator=(const NDView& rhs) {
-    broadcast((*this), rhs, [](int& a, int b) { a = b; });
+  NDView(const NDView& rhs) = default;
+  NDView(NDView&& rhs) = default;
+
+  NDView& operator=(const T& rhs) {
+    broadcast([=](int& a) { a = rhs; }, (*this));
     return *this;
   }
+
+  NDView& operator=(const NDView& rhs) {
+    broadcast([](int& a, int b) { a = b; }, (*this), rhs);
+    return *this;
+  }
+
+  NDView& operator=(NDView&& rhs) = default;
 
   std::size_t length() const noexcept {
     return std::accumulate(shape_.begin(), shape_.end(), 1ul, std::multiplies<std::size_t>());
@@ -31,10 +41,16 @@ public:
   requires is_index_pack<dims, Ints...> const T& operator()(Ints... ns) const noexcept {
     return data_[linindex(ns...)];
   }
+  const T& operator()(const std::array<std::size_t, dims>& ns) const noexcept {
+    return data_[linindex(ns)];
+  }
 
   template <class... Ints>
   requires is_index_pack<dims, Ints...> T& operator()(Ints... ns) noexcept {
     return data_[linindex(ns...)];
+  }
+  T& operator()(const std::array<std::size_t, dims>& ns) noexcept {
+    return data_[linindex(ns)];
   }
 
   template <class... Args>
@@ -86,6 +102,22 @@ private:
     assert((i = 0, ((ids < shape_[i++]) && ...)));
 
     return lid;
+  }
+
+  std::size_t linindex(const std::array<std::size_t, dims>& ids) const noexcept {
+    std::size_t lid = 0;
+    for (std::size_t i = 0; i < ids.size(); ++i) {
+      lid += ids[i] * strides_[i];
+    }
+
+    // Debug mode index check.
+    // TODO
+    return lid;
+  }
+
+  void copySize(const NDView& rhs) {
+    shape_ = rhs.shape_;
+    strides_ = rhs.strides_;
   }
 
   T* data_ = nullptr;
