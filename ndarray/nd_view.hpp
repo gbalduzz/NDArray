@@ -107,9 +107,9 @@ public:
   }
 
   iterator end() noexcept {
-    iterator it(nullptr, shape_, strides_);
+    iterator it(data_, shape_, strides_);
     it.index_[0] = shape_[0];
-    it.ptr_ = data_ + shape_[0] * strides_[0];
+    it.ptr_ += shape_[0] * strides_[0];
     return it;
   }
   const_iterator cend() const noexcept {
