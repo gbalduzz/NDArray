@@ -10,9 +10,11 @@ template <class T, std::size_t dims>
 class NDArray {
 public:
   constexpr static std::size_t dimensions = dims;
+  using iterator = typename std::vector<T>::iterator;
+  using const_iterator = typename std::vector<T>::const_iterator;
 
-  template <class... Ints> requires is_complete_index<dims, Ints...>
-  NDArray(Ints... ns) : view_{ns...} {
+  template <class... Ints>
+  requires is_complete_index<dims, Ints...> NDArray(Ints... ns) : view_{ns...} {
     data_.resize((ns * ...), 0);
     view_.data_ = data_.data();
   }
@@ -57,12 +59,12 @@ public:
   }
 
   // Return reference to value
-  template <class... Args> requires is_complete_index<dims, Args...>
-  T& operator()(Args&&... ns) noexcept {
+  template <class... Args>
+  requires is_complete_index<dims, Args...> T& operator()(Args&&... ns) noexcept {
     return view_(std::forward<Args>(ns)...);
   }
-  template <class... Args> requires is_complete_index<dims, Args...>
-  const T& operator()(Args&&... ns) const noexcept {
+  template <class... Args>
+  requires is_complete_index<dims, Args...> const T& operator()(Args&&... ns) const noexcept {
     return view_(std::forward<Args>(ns)...);
   }
 
@@ -73,7 +75,6 @@ public:
   const T& operator()(const std::array<std::size_t, dims>& ns) const noexcept {
     return view_(ns);
   }
-
 
   // Return views.
   template <class... Args>
@@ -91,6 +92,26 @@ public:
 
   operator NDView<const T, dims>() const noexcept {
     return view_;
+  }
+
+  iterator begin() noexcept {
+    return data_.begin();
+  }
+  iterator end() noexcept {
+    return data_.end();
+  }
+  iterator cbegin() const noexcept {
+    return data_.cbegin();
+  }
+  iterator cend() const noexcept {
+    return data_.cend();
+  }
+
+  auto rbegin() noexcept {
+    return data_.rbegin();
+  }
+  auto rend() noexcept {
+    return data_.rend();
   }
 
 private:

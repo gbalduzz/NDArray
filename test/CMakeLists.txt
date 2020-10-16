@@ -6,3 +6,4 @@ function (ndarray_add_test name)
 endfunction()
 
 ndarray_add_test(nd_array_test)
+ndarray_add_test(nd_iterator_test)

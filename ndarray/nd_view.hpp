@@ -7,6 +7,7 @@
 
 #include "broadcast.hpp"
 #include "ranges.hpp"
+#include "nd_view_iterator.hpp"
 
 namespace nd {
 
@@ -14,6 +15,8 @@ template <class T, std::size_t dims>
 class NDView {
 public:
   constexpr static std::size_t dimensions = dims;
+  using iterator = NDViewIterator<T, dims, false>;
+  using const_iterator = NDViewIterator<T, dims, true>;
 
   NDView(const NDView& rhs) = default;
   NDView(NDView&& rhs) = default;
@@ -36,24 +39,24 @@ public:
     return shape_;
   }
 
-  template <class... Ints> requires is_complete_index<dims, Ints...>
-  const T& operator()(Ints... ns) const noexcept {
+  template <class... Ints>
+  requires is_complete_index<dims, Ints...> const T& operator()(Ints... ns) const noexcept {
     return data_[linindex(ns...)];
   }
   const T& operator()(const std::array<std::size_t, dims>& ns) const noexcept {
     return data_[linindex(ns)];
   }
 
-  template <class... Ints> requires is_complete_index<dims, Ints...>
-  T& operator()(Ints... ns) noexcept {
+  template <class... Ints>
+  requires is_complete_index<dims, Ints...> T& operator()(Ints... ns) noexcept {
     return data_[linindex(ns...)];
   }
   T& operator()(const std::array<std::size_t, dims>& ns) noexcept {
     return data_[linindex(ns)];
   }
 
-  template <class... Args> requires is_partial_index<dims, Args...>
-  auto operator()(Args... args) {
+  template <class... Args>
+  requires is_partial_index<dims, Args...> auto operator()(Args... args) {
     NDView<T, free_dimensions<dims, Args...>> slice;
     const auto start = linindex(getStart(args)...);
     slice.data_ = data_ + start;
@@ -72,20 +75,19 @@ public:
     }
 
     // Fill missing dimensions with complete range
-    for(; local_d < dimensions; ++local_d){
+    for (; local_d < dimensions; ++local_d) {
       slice.shape_[target_d] = shape_[local_d];
       slice.strides_[target_d] = strides_[local_d];
       ++target_d;
     }
-
 
     // TODO: debug check slice.
 
     return slice;
   }
 
-  template <class... Args> requires is_partial_index<dims, Args...>
-  auto operator()(Args... args) const {
+  template <class... Args>
+  requires is_partial_index<dims, Args...> auto operator()(Args... args) const {
     auto nonconst_view = (*const_cast<NDView<T, dims>*>(this))(args...);
 
     constexpr std::size_t new_dims = free_dimensions<dims, Args...>;
@@ -97,6 +99,26 @@ public:
     return const_view;
   }
 
+  iterator begin() noexcept {
+    return iterator(data_, shape_, strides_);
+  }
+  const_iterator cbegin() const noexcept {
+    return const_iterator(data_, shape_, strides_);
+  }
+
+  iterator end() noexcept {
+    iterator it(nullptr, shape_, strides_);
+    it.index_[0] = shape_[0];
+    it.ptr_ = data_ + shape_[0] * strides_[0];
+    return it;
+  }
+  const_iterator cend() const noexcept {
+    const_iterator it(nullptr, shape_, strides_);
+    it.index_[0] = shape_[0];
+    it.ptr_ = data_ + shape_[0] * strides_[0];
+    return it;
+  }
+
 private:
   template <class T2, std::size_t n2>
   friend class NDView;
@@ -105,11 +127,11 @@ private:
 
   NDView() = default;
   NDView(T* data, const std::array<std::size_t, dims>& shape,
-         const std::array<std::size_t, dims>& strides) :
-      data_(data), shape_(shape), strides_(strides){}
+         const std::array<std::size_t, dims>& strides)
+      : data_(data), shape_(shape), strides_(strides) {}
 
-  template <class... Ints> requires is_complete_index<dims, Ints...>
-  NDView(Ints... ns) : shape_{std::size_t(ns)...} {
+  template <class... Ints>
+  requires is_complete_index<dims, Ints...> NDView(Ints... ns) : shape_{std::size_t(ns)...} {
     // row-major
     strides_.back() = 1;
     for (int i = dimensions - 2; i >= 0; --i)
@@ -117,8 +139,8 @@ private:
   }
 
   template <class... Ints>
-  requires is_complete_index<dims, Ints...> ||
-           is_partial_index<dims, Ints...> std::size_t linindex(Ints... ids) const noexcept {
+      requires is_complete_index<dims, Ints...> ||
+      is_partial_index<dims, Ints...> std::size_t linindex(Ints... ids) const noexcept {
     std::size_t lid = 0;
     unsigned i = 0;
     (..., (lid += ids * strides_[i++]));
