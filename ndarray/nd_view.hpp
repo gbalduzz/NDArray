@@ -133,9 +133,14 @@ private:
          const std::array<std::size_t, dims>& strides)
       : data_(data), shape_(shape), strides_(strides) {}
 
-  template <class... Ints>
-  requires is_complete_index<dims, Ints...> NDView(Ints... ns) : shape_{std::size_t(ns)...} {
-    // row-major
+  template <class... Ints> requires is_complete_index<dims, Ints...>
+  NDView(Ints... ns) {
+    reshape(ns...);
+  }
+
+  template <class... Ints> requires is_complete_index<dims, Ints...>
+  void reshape(Ints... ns) {
+    shape_ = {std::size_t(ns)...};
     strides_.back() = 1;
     for (int i = dimensions - 2; i >= 0; --i)
       strides_[i] = strides_[i + 1] * shape_[i + 1];

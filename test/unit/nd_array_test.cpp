@@ -65,3 +65,9 @@ TEST(NDArrayTest, Broadcasting) {
       for (int k = 0; k < A.shape()[2]; ++k)
         EXPECT_EQ(A(i, j, k), i + j * j - k);
 }
+
+TEST(NDArrayTest, Resize) {
+  NDArray<float, 3> arr;
+  arr.reshape(2, 4, 1);
+  EXPECT_EQ(arr.shape(), (std::array<std::size_t, 3>{2, 4, 1}));
+}

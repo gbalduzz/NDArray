@@ -13,9 +13,11 @@ public:
   using iterator = typename std::vector<T>::iterator;
   using const_iterator = typename std::vector<T>::const_iterator;
 
-  template <class... Ints>
-  requires is_complete_index<dims, Ints...> NDArray(Ints... ns) : view_{ns...} {
-    data_.resize((ns * ...), 0);
+  NDArray() = default;
+
+  template <class... Ints> requires is_complete_index<dims, Ints...>
+  NDArray(Ints... ns) : view_{ns...} {
+    data_.resize((ns * ...));
     view_.data_ = data_.data();
   }
 
@@ -35,6 +37,13 @@ public:
   NDArray& operator=(const T& rhs) {
     std::fill(data_.begin(), data_.end(), rhs);
     return *this;
+  }
+
+  template <class... Ints> requires is_complete_index<dims, Ints...>
+  void reshape(Ints... ns) {
+    view_.reshape(ns...);
+    data_.resize((ns *...));
+    view_.data_ = data_.data();
   }
 
   std::size_t length() const noexcept {
