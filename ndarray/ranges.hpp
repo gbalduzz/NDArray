@@ -6,11 +6,11 @@
 namespace nd {
 
 struct range {  // [start, end)
-  std::size_t start;
-  std::size_t end;
+  long int start;
+  long int end;
 };
 
-constexpr std::size_t end = -1;
+constexpr long int end = 0;
 constexpr range all{0, end};
 
 template <std::size_t N, class... Args>
@@ -26,22 +26,23 @@ template <std::size_t N, class... Args>
 constexpr std::size_t free_dimensions = N -
                                         (std::size_t(std::is_integral_v<std::decay_t<Args>>) + ...);
 
-std::size_t getStart(const range& r) {
-  return r.start;
+template <std::integral I>
+std::size_t getStart(I i, const std::size_t shape) {
+  return i >= 0 ? i : shape + i;
+}
+
+std::size_t getStart(const range& r, const std::size_t shape) {
+  return getStart(r.start, shape);
+}
+
+std::size_t getSpan(const range& r, const std::size_t shape) {
+  const std::size_t idx_end = r.end > 0 ? r.end : shape + r.end;
+  assert(idx_end <= shape && idx_end > r.start);
+  return idx_end - r.start;
 }
 
 template <std::integral I>
-std::size_t getStart(I i) {
-  return i;
-}
-
-std::size_t getSpan(const range& r, const std::size_t tot_size) {
-  assert(r.end == end || (r.end > r.start && r.end <= tot_size));
-  return r.end == end ? tot_size - r.start : r.end - r.start;
-}
-
-template <std::integral I>
-std::size_t getSpan(const I idx, const std::size_t tot_size) {
+std::size_t getSpan(const I idx, const std::size_t shape) {
   return 0;
 }
 

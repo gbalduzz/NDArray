@@ -41,6 +41,11 @@ TEST(NDArrayTest, Assignment) {
   std::ostringstream s2;
   s2 << m(all, 1);
   EXPECT_EQ(s2.str(), "[3, 3]");
+
+  // Negative index counts from the end.
+  NDArray<int, 4> t(4, 2, 5, 6);
+  auto t2 = t(range{0, -1}, -1, all, range{2, end});
+  EXPECT_EQ(t2.shape(), (std::array<std::size_t, 3>{3, 5, 4}));
 }
 
 TEST(NDArrayTest, Broadcasting) {

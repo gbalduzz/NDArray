@@ -4,6 +4,7 @@
 #include <cassert>
 #include <ostream>
 #include <numeric>
+#include <tuple>
 
 #include "broadcast.hpp"
 #include "ranges.hpp"
@@ -58,10 +59,12 @@ public:
   template <class... Args>
   requires is_partial_index<dims, Args...> auto operator()(Args... args) {
     NDView<T, free_dimensions<dims, Args...>> slice;
-    const auto start = linindex(getStart(args)...);
-    slice.data_ = data_ + start;
 
     unsigned i = 0;
+    std::array<std::size_t, sizeof...(Args)> start{getStart(args, shape_[i++])...};
+    slice.data_ = data_ + linindex(start);
+
+    i = 0;
     std::array<std::size_t, sizeof...(Args)> spans{getSpan(args, shape_[i++])...};
 
     unsigned target_d = 0;
@@ -139,8 +142,8 @@ private:
   }
 
   template <class... Ints>
-      requires is_complete_index<dims, Ints...> ||
-      is_partial_index<dims, Ints...> std::size_t linindex(Ints... ids) const noexcept {
+  requires is_complete_index<dims, Ints...> ||
+           is_partial_index<dims, Ints...> std::size_t linindex(Ints... ids) const noexcept {
     std::size_t lid = 0;
     unsigned i = 0;
     (..., (lid += ids * strides_[i++]));
@@ -152,14 +155,14 @@ private:
     return lid;
   }
 
-  std::size_t linindex(const std::array<std::size_t, dims>& ids) const noexcept {
+  template<std::size_t id_size> requires (id_size <= dims)
+  std::size_t linindex(const std::array<std::size_t, id_size>& ids) const noexcept {
     std::size_t lid = 0;
     for (std::size_t i = 0; i < ids.size(); ++i) {
+      assert(ids[i] < shape_[i]);
       lid += ids[i] * strides_[i];
     }
 
-    // Debug mode index check.
-    // TODO
     return lid;
   }
 
