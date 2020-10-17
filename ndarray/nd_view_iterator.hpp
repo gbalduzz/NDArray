@@ -32,7 +32,7 @@ public:
   }
 
   NDViewIterator& operator++() {
-    auto& shape = *shape_;
+    const auto& shape = *shape_;
 
     ++index_.back();
 
@@ -47,7 +47,7 @@ public:
   }
 
   NDViewIterator& operator--() {
-    auto& shape = *shape_;
+    const auto& shape = *shape_;
 
     --index_.back();
 
@@ -78,10 +78,13 @@ public:
 
   NDViewIterator& operator+=(difference_type n) {
     index_.back() += n;
+    const auto& shape = (*shape_);
 
     for (unsigned i = dims - 1; i >= 1; --i) {
-      const auto carriage = index_[i] / (*shape_)[i];
-      index_[i] -= carriage * (*shape_)[i];
+      if (index_[i] < shape[i])
+        break;
+      const auto carriage = index_[i] / shape[i];
+      index_[i] -= carriage * shape[i];
       index_[i - 1] += carriage;
     }
 
@@ -93,16 +96,16 @@ public:
   }
 
   NDViewIterator& operator-=(difference_type n) {
-    auto& shape = *shape_;
+    const auto& shape = *shape_;
 
     index_.back() -= n;
 
     for (unsigned i = dims - 1; i >= 1; --i) {
-      if (index_[i] < 0) {
-        const auto carriage = (-index_[i] + shape[i] - 1) / shape[i];
-        index_[i] += carriage * shape[i];
-        index_[i - 1] -= carriage;
-      }
+      if (index_[i] >= 0)
+        break;
+      const auto carriage = (-index_[i] + shape[i] - 1) / shape[i];
+      index_[i] += carriage * shape[i];
+      index_[i - 1] -= carriage;
     }
 
     return (*this);
@@ -183,17 +186,21 @@ public:
   }
 
   NDViewIterator operator+(difference_type n) const {
-    NDViewIterator advanced(*this);
-    advanced.index_ += n;
+    return NDViewIterator(*this) += n;
+  }
 
-    return advanced;
+  NDViewIterator& operator+=(difference_type n) {
+    index_ += n;
+    return (*this);
   }
 
   NDViewIterator operator-(difference_type n) const {
-    NDViewIterator precedent(*this);
-    precedent.index_ -= n;
+    return NDViewIterator(*this) -= n;
+  }
 
-    return precedent;
+  NDViewIterator& operator-=(difference_type n) {
+    index_ -= n;
+    return (*this);
   }
 
   auto operator==(const NDViewIterator& rhs) const noexcept {
