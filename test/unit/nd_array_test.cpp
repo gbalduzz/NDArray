@@ -56,4 +56,12 @@ TEST(NDArrayTest, Broadcasting) {
   NDArray<int, 3> C(1, 2, 5);
 
   broadcast([](int a, int b, int& c) { c = a + b; }, A, B, C);
+
+  // Pass and process each value of the 3 dimensional index to A.
+  broadcastIndex([](int& x, const auto& idx) { x = idx[0] + idx[1] * idx[1] - idx[2]; }, A);
+
+  for (int i = 0; i < A.shape()[0]; ++i)
+    for (int j = 0; j < A.shape()[1]; ++j)
+      for (int k = 0; k < A.shape()[2]; ++k)
+        EXPECT_EQ(A(i, j, k), i + j * j - k);
 }
