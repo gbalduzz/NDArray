@@ -108,8 +108,13 @@ public:
 
   iterator end() noexcept {
     iterator it(data_, shape_, strides_);
-    it.index_[0] = shape_[0];
-    it.ptr_ += shape_[0] * strides_[0];
+    if constexpr (dims == 1) {
+      it.index_ += shape_[0];
+    }
+    else {
+      it.index_[0] = shape_[0];
+      it.ptr_ += shape_[0] * strides_[0];
+    }
     return it;
   }
   const_iterator cend() const noexcept {
