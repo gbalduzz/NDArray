@@ -19,26 +19,46 @@ public:
   NDViewIterator& operator=(const NDViewIterator& rhs) = default;
 
   const T& operator*() const {
-    return *ptr_;
+    return *(ptr_ + linindex());
   }
   T& operator*() {
-    return *ptr_;
+    return *(ptr_ + linindex());
   }
   const T* operator->() const {
-    return ptr_;
+    return ptr_ + linindex();
   }
   T* operator->() {
-    return ptr_;
+    return ptr_ + linindex();
   }
 
   NDViewIterator& operator++() {
-    (*this) = (*this) + 1;
-    return *this;
+    auto& shape = *shape_;
+
+    ++index_.back();
+
+    for (unsigned i = dims - 1; i >= 1; --i) {
+      if (index_[i] < shape[i])
+        break;
+      index_[i] = 0;
+      ++index_[i - 1];
+    }
+
+    return (*this);
   }
 
   NDViewIterator& operator--() {
-    (*this) = (*this) - 1;
-    return *this;
+    auto& shape = *shape_;
+
+    --index_.back();
+
+    for (unsigned i = dims - 1; i >= 1; --i) {
+      if (index_[i] >= 0)
+        break;
+      index_[i] = shape[i] - 1;
+      --index_[i - 1];
+    }
+
+    return (*this);
   }
 
   difference_type operator-(const NDViewIterator& rhs) const {
@@ -53,58 +73,49 @@ public:
   }
 
   NDViewIterator operator+(difference_type n) const {
-    NDViewIterator advanced(*this);
+    return NDViewIterator(*this) += n;
+  }
 
-    advanced.index_.back() += n;
-    long int tot_stride = 0;
+  NDViewIterator& operator+=(difference_type n) {
+    index_.back() += n;
 
     for (unsigned i = dims - 1; i >= 1; --i) {
-      const auto carriage = advanced.index_[i] / (*shape_)[i];
-      advanced.index_[i] -= carriage * (*shape_)[i];
-      advanced.index_[i - 1] += carriage;
-
-      tot_stride += (advanced.index_[i] - index_[i]) * (*strides_)[i];
+      const auto carriage = index_[i] / (*shape_)[i];
+      index_[i] -= carriage * (*shape_)[i];
+      index_[i - 1] += carriage;
     }
-    tot_stride += (advanced.index_[0] - index_[0]) * (*strides_)[0];
 
-    advanced.ptr_ += tot_stride;
-
-    return advanced;
+    return (*this);
   }
 
   NDViewIterator operator-(difference_type n) const {
-    NDViewIterator precedent(*this);
+    return NDViewIterator(*this) -= n;
+  }
 
+  NDViewIterator& operator-=(difference_type n) {
     auto& shape = *shape_;
-    auto& strides = *strides_;
 
-    precedent.index_.back() -= n;
-    long int tot_stride = 0;
+    index_.back() -= n;
 
     for (unsigned i = dims - 1; i >= 1; --i) {
-      if (precedent.index_[i] < 0) {
-        const auto carriage = (-precedent.index_[i] + shape[i] - 1) / shape[i];
-        precedent.index_[i] += carriage * shape[i];
-        precedent.index_[i - 1] -= carriage;
+      if (index_[i] < 0) {
+        const auto carriage = (-index_[i] + shape[i] - 1) / shape[i];
+        index_[i] += carriage * shape[i];
+        index_[i - 1] -= carriage;
       }
-
-      tot_stride += (precedent.index_[i] - index_[i]) * strides[i];
     }
-    tot_stride += (precedent.index_[0] - index_[0]) * strides[0];
 
-    precedent.ptr_ += tot_stride;
-
-    return precedent;
+    return (*this);
   }
 
   auto operator==(const NDViewIterator& rhs) const noexcept {
-    return ptr_ == rhs.ptr_;
+    return index_ == rhs.index_;
   }
   auto operator!=(const NDViewIterator& rhs) const noexcept {
     return !(*this == rhs);
   }
   auto operator<(const NDViewIterator& rhs) const noexcept {
-    return ptr_ < rhs.ptr_;
+    return index_ < rhs.index_;
   }
 
 private:
@@ -116,8 +127,14 @@ private:
     index_.fill(0);
     if (pos == 'e') {
       index_[0] = shape[0];
-      ptr_ += shape[0] * strides[0];
     }
+  }
+
+  std::size_t linindex() const noexcept {
+    std::size_t idx = 0;
+    for (int i = 0; i < dims; ++i)
+      idx += index_[i] * (*strides_)[i];
+    return idx;
   }
 
   CondConst<T*> ptr_ = nullptr;
