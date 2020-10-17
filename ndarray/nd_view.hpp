@@ -100,28 +100,17 @@ public:
   }
 
   iterator begin() noexcept {
-    return iterator(data_, shape_, strides_);
+    return iterator(data_, shape_, strides_, 'b');
   }
   const_iterator cbegin() const noexcept {
-    return const_iterator(data_, shape_, strides_);
+    return const_iterator(data_, shape_, strides_, 'b');
   }
 
   iterator end() noexcept {
-    iterator it(data_, shape_, strides_);
-    if constexpr (dims == 1) {
-      it.index_ += shape_[0];
-    }
-    else {
-      it.index_[0] = shape_[0];
-      it.ptr_ += shape_[0] * strides_[0];
-    }
-    return it;
+    return iterator(data_, shape_, strides_, 'e');
   }
   const_iterator cend() const noexcept {
-    const_iterator it(nullptr, shape_, strides_);
-    it.index_[0] = shape_[0];
-    it.ptr_ = data_ + shape_[0] * strides_[0];
-    return it;
+    const_iterator(data_, shape_, strides_, 'e');
   }
 
 private:

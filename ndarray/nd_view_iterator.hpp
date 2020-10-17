@@ -111,9 +111,13 @@ private:
   friend class NDView<T, dims>;
 
   NDViewIterator(CondConst<T*> ptr, const std::array<std::size_t, dims>& shape,
-                 const std::array<std::size_t, dims>& strides)
+                 const std::array<std::size_t, dims>& strides, const char pos)
       : ptr_(ptr), shape_(&shape), strides_(&strides) {
     index_.fill(0);
+    if (pos == 'e') {
+      index_[0] = shape[0];
+      ptr_ += shape[0] * strides[0];
+    }
   }
 
   CondConst<T*> ptr_ = nullptr;
@@ -188,9 +192,9 @@ public:
 private:
   friend class NDView<T, 1>;
 
-  NDViewIterator(CondConst<T*> ptr, const std::array<std::size_t, 1>& /*shape*/,
-                 const std::array<std::size_t, 1>& strides)
-      : ptr_(ptr), index_(0), stride_(strides[0]) {}
+  NDViewIterator(CondConst<T*> ptr, const std::array<std::size_t, 1>& shape,
+                 const std::array<std::size_t, 1>& strides, char pos)
+      : ptr_(ptr), index_(pos == 'e' ? shape[0] : 0), stride_(strides[0]) {}
 
   CondConst<T*> ptr_ = nullptr;
   std::size_t index_ = 0;
