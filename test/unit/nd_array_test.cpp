@@ -21,7 +21,7 @@ TEST(NDArrayTest, Indexing) {
 
   EXPECT_DEBUG_DEATH(arr(3, 0, 0), "Assertion.*");
   EXPECT_DEBUG_DEATH(arr(0, range{0, 3}, 0), "Assertion.*");
-  assert(arr(range{0, 2}, 0, 0).length() == 2);
+  EXPECT_EQ(arr(range{0, 2}, 0, 0).length(), 2);
 }
 
 TEST(NDArrayTest, Assignment) {
@@ -50,5 +50,5 @@ TEST(NDArrayTest, Broadcasting) {
   B = 2;
   NDArray<int, 3> C(1, 2, 5);
 
-  broadcast([](int a, int b, int& c){c = a + b;}, A, B, C);
+  broadcast([](int a, int b, int& c) { c = a + b; }, A, B, C);
 }

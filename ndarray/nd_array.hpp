@@ -59,16 +59,15 @@ public:
   }
 
   // Return reference to value
-  template <class... Args>
-  requires is_complete_index<dims, Args...> T& operator()(Args&&... ns) noexcept {
+  template <class... Args> requires is_complete_index<dims, Args...>
+  T& operator()(Args&&... ns) noexcept {
     return view_(std::forward<Args>(ns)...);
   }
-  template <class... Args>
-  requires is_complete_index<dims, Args...> const T& operator()(Args&&... ns) const noexcept {
+  template <class... Args> requires is_complete_index<dims, Args...>
+  const T& operator()(Args&&... ns) const noexcept {
     return view_(std::forward<Args>(ns)...);
   }
 
-  // TODO: remove
   T& operator()(const std::array<std::size_t, dims>& ns) noexcept {
     return view_(ns);
   }
@@ -77,11 +76,11 @@ public:
   }
 
   // Return views.
-  template <class... Args>
+  template <class... Args> requires is_partial_index<dims, Args...>
   auto operator()(Args&&... ns) noexcept {
     return view_(std::forward<Args>(ns)...);
   }
-  template <class... Args>
+  template <class... Args> requires is_partial_index<dims, Args...>
   auto operator()(Args&&... ns) const noexcept {
     return view_(std::forward<Args>(ns)...);
   }
