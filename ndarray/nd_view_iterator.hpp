@@ -12,22 +12,30 @@ class NDViewIterator : public std::iterator<std::random_access_iterator_tag, T> 
 public:
   template <class U>
   using CondConst = std::conditional_t<is_const, const U, U>;
-  using difference_type = std::size_t;
+  using Base = std::iterator<std::random_access_iterator_tag, T>;
+  using typename Base::iterator_category;
+  using typename Base::difference_type;
+  using typename Base::value_type;
+  using typename Base::reference;
+  using typename Base::pointer;
 
 public:
+  NDViewIterator() = default;
   NDViewIterator(const NDViewIterator& rhs) = default;
+  NDViewIterator(NDViewIterator&& rhs) = default;
   NDViewIterator& operator=(const NDViewIterator& rhs) = default;
+  NDViewIterator& operator=(NDViewIterator&& rhs) = default;
 
-  const T& operator*() const {
+  const reference operator*() const {
     return *(ptr_ + linindex());
   }
-  T& operator*() {
+  reference operator*() {
     return *(ptr_ + linindex());
   }
-  const T* operator->() const {
+  const pointer operator->() const {
     return ptr_ + linindex();
   }
-  T* operator->() {
+  pointer operator->() {
     return ptr_ + linindex();
   }
 
@@ -46,6 +54,12 @@ public:
     return (*this);
   }
 
+  NDViewIterator operator++(int) {
+    NDViewIterator cpy(*this);
+    ++(*this);
+    return cpy;
+  }
+
   NDViewIterator& operator--() {
     const auto& shape = *shape_;
 
@@ -61,8 +75,14 @@ public:
     return (*this);
   }
 
+  NDViewIterator operator--(int) {
+    NDViewIterator cpy(*this);
+    --(*this);
+    return cpy;
+  }
+
   difference_type operator-(const NDViewIterator& rhs) const {
-    long int diff = 0;
+    difference_type diff = 0;
     std::size_t tot_steps = 1;
     for (int i = dims - 1; i >= 0; --i) {
       diff += tot_steps * (index_[i] - rhs.index_[i]);
@@ -120,6 +140,15 @@ public:
   auto operator<(const NDViewIterator& rhs) const noexcept {
     return index_ < rhs.index_;
   }
+  auto operator<=(const NDViewIterator& rhs) const noexcept {
+    return index_ <= rhs.index_;
+  }
+  auto operator>(const NDViewIterator& rhs) const noexcept {
+    return index_ > rhs.index_;
+  }
+  auto operator>=(const NDViewIterator& rhs) const noexcept {
+    return index_ >= rhs.index_;
+  }
 
 private:
   friend class NDView<T, dims>;
@@ -152,22 +181,27 @@ class NDViewIterator<T, 1, is_const> : public std::iterator<std::random_access_i
 public:
   template <class U>
   using CondConst = std::conditional_t<is_const, const U, U>;
-  using difference_type = std::size_t;
+  using Base = std::iterator<std::random_access_iterator_tag, T>;
+  using typename Base::iterator_category;
+  using typename Base::difference_type;
+  using typename Base::value_type;
+  using typename Base::reference;
+  using typename Base::pointer;
 
 public:
   NDViewIterator(const NDViewIterator& rhs) = default;
   NDViewIterator& operator=(const NDViewIterator& rhs) = default;
 
-  const T& operator*() const {
+  const reference operator*() const {
     return *(ptr_ + index_ * stride_);
   }
-  T& operator*() {
+  reference operator*() {
     return *(ptr_ + index_ * stride_);
   }
-  const T* operator->() const {
+  const pointer operator->() const {
     return ptr_ + index_ * stride_;
   }
-  T* operator->() {
+  pointer operator->() {
     return ptr_ + index_ * stride_;
   }
 
@@ -175,10 +209,20 @@ public:
     ++index_;
     return *this;
   }
+  NDViewIterator operator++(int) {
+    NDViewIterator cpy(*this);
+    ++(*this);
+    return cpy;
+  }
 
   NDViewIterator& operator--() {
     --index_;
     return *this;
+  }
+  NDViewIterator operator--(int) {
+    NDViewIterator cpy(*this);
+    --(*this);
+    return cpy;
   }
 
   difference_type operator-(const NDViewIterator& rhs) const {
@@ -212,6 +256,15 @@ public:
   auto operator<(const NDViewIterator& rhs) const noexcept {
     return index_ < rhs.index_;
   }
+  auto operator<=(const NDViewIterator& rhs) const noexcept {
+    return index_ <= rhs.index_;
+  }
+  auto operator>(const NDViewIterator& rhs) const noexcept {
+    return index_ > rhs.index_;
+  }
+  auto operator>=(const NDViewIterator& rhs) const noexcept {
+    return index_ >= rhs.index_;
+  }
 
 private:
   friend class NDView<T, 1>;
@@ -221,7 +274,7 @@ private:
       : ptr_(ptr), index_(pos == 'e' ? shape[0] : 0), stride_(strides[0]) {}
 
   CondConst<T*> ptr_ = nullptr;
-  std::size_t index_ = 0;
+  difference_type index_ = 0;
   std::size_t stride_ = 0;
 };
 

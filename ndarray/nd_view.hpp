@@ -102,11 +102,17 @@ public:
   iterator begin() noexcept {
     return iterator(data_, shape_, strides_, 'b');
   }
+  const_iterator begin() const noexcept {
+    return iterator(data_, shape_, strides_, 'b');
+  }
   const_iterator cbegin() const noexcept {
     return const_iterator(data_, shape_, strides_, 'b');
   }
 
   iterator end() noexcept {
+    return iterator(data_, shape_, strides_, 'e');
+  }
+  const_iterator end() const noexcept {
     return iterator(data_, shape_, strides_, 'e');
   }
   const_iterator cend() const noexcept {

@@ -3,7 +3,6 @@
 #include "gtest/gtest.h"
 #include <iostream>
 #include <numeric>
-#include <ranges>
 
 using namespace nd;
 TEST(NDIteratorTest, OneDView) {
