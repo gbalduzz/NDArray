@@ -18,6 +18,7 @@ public:
   constexpr static std::size_t dimensions = dims;
   using iterator = NDViewIterator<T, dims, false>;
   using const_iterator = NDViewIterator<T, dims, true>;
+  using value_type = T;
 
   NDView(const NDView& rhs) = default;
   NDView(NDView&& rhs) = default;

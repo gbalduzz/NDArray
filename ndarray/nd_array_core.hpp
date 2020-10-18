@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "lazy_functions.hpp"
 #include "nd_view.hpp"
 
 namespace nd {
@@ -12,11 +13,14 @@ public:
   constexpr static std::size_t dimensions = dims;
   using iterator = typename std::vector<T>::iterator;
   using const_iterator = typename std::vector<T>::const_iterator;
+  using value_type = T;
+
+  constexpr static bool contiguous_storage = true;
 
   NDArray() = default;
 
-  template <class... Ints> requires is_complete_index<dims, Ints...>
-  NDArray(Ints... ns) : view_{ns...} {
+  template <class... Ints>
+  requires is_complete_index<dims, Ints...> NDArray(Ints... ns) : view_{ns...} {
     data_.resize((ns * ...), {});
     view_.data_ = data_.data();
   }
@@ -39,10 +43,17 @@ public:
     return *this;
   }
 
-  template <class... Ints> requires is_complete_index<dims, Ints...>
-  void reshape(Ints... ns) {
+  template <char op, class L, class R>
+  NDArray& operator=(const LazyFunction<op, L, R>&& f) {
+    for (std::size_t i = 0; i < data_.size(); ++i)
+      data_[i] = f(i);
+    return *this;
+  }
+
+  template <class... Ints>
+  requires is_complete_index<dims, Ints...> void reshape(Ints... ns) {
     view_.reshape(ns...);
-    data_.resize((ns *...), {});
+    data_.resize((ns * ...), {});
     view_.data_ = data_.data();
   }
 
@@ -68,12 +79,12 @@ public:
   }
 
   // Return reference to value
-  template <class... Args> requires is_complete_index<dims, Args...>
-  T& operator()(Args&&... ns) noexcept {
+  template <class... Args>
+  requires is_complete_index<dims, Args...> T& operator()(Args&&... ns) noexcept {
     return view_(std::forward<Args>(ns)...);
   }
-  template <class... Args> requires is_complete_index<dims, Args...>
-  const T& operator()(Args&&... ns) const noexcept {
+  template <class... Args>
+  requires is_complete_index<dims, Args...> const T& operator()(Args&&... ns) const noexcept {
     return view_(std::forward<Args>(ns)...);
   }
 
@@ -85,12 +96,12 @@ public:
   }
 
   // Return views.
-  template <class... Args> requires is_partial_index<dims, Args...>
-  auto operator()(Args&&... ns) noexcept {
+  template <class... Args>
+  requires is_partial_index<dims, Args...> auto operator()(Args&&... ns) noexcept {
     return view_(std::forward<Args>(ns)...);
   }
-  template <class... Args> requires is_partial_index<dims, Args...>
-  auto operator()(Args&&... ns) const noexcept {
+  template <class... Args>
+  requires is_partial_index<dims, Args...> auto operator()(Args&&... ns) const noexcept {
     return view_(std::forward<Args>(ns)...);
   }
 

@@ -5,5 +5,6 @@ function (ndarray_add_test name)
     add_test(NAME ${name} COMMAND ${name})
 endfunction()
 
-ndarray_add_test(nd_array_test)
 ndarray_add_test(nd_iterator_test)
+ndarray_add_test(lazy_evaluation_test)
+ndarray_add_test(nd_array_test)
