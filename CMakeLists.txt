@@ -4,6 +4,7 @@ project(ndarray)
 set(CMAKE_CXX_STANDARD 20)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/NumCpp)
 
 option(BUILD_TESTS ON)
 if(BUILD_TESTS)

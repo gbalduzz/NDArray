@@ -71,3 +71,19 @@ TEST(NDArrayTest, Resize) {
   arr.reshape(2, 4, 1);
   EXPECT_EQ(arr.shape(), (std::array<std::size_t, 3>{2, 4, 1}));
 }
+
+TEST(NDArrayTest, InitFunctions) {
+  auto arr = zeros<int>(2, 4, 5);
+  EXPECT_EQ(arr.shape(), (std::array<std::size_t, 3>{2, 4, 5}));
+  for (auto x : arr)
+    EXPECT_EQ(0, x);
+
+  nd::seed(42);
+  auto r = rand<float>(1, 6, 3, 2);
+  EXPECT_EQ(r.shape(), (std::array<std::size_t, 4>{1, 6, 3, 2}));
+
+  std::mt19937_64 rng(42);
+  std::uniform_real_distribution<float> distro(0, 1);
+  for (auto x : r)
+    EXPECT_EQ(distro(rng), x);
+}
