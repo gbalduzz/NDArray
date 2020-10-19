@@ -3,14 +3,31 @@ This is a small header only library aimed to provide a c++ n-dimensional tensor 
 and splice methods as close as possible to python numpy arrays, while providing compatibility with the STL through
 random access iterators.
 
+# Benchmark
+The performance of the library  is evaluated against 
+[xtensor](https://github.com/xtensor-stack/xtensor), a well established library with similar 
+features. An intel i7-7700k CPU, the GCC 10.2.0 compiler, and `-O3 -DNDEBUG` flags were used. 
+
+![benchmark](figures/benchmark.png)
+
+The sort tests involve sorting a 1D view of a 2D array or a 3D view of a 5D array.
+The "Contiguous lazy evaluation" involves computing and storing a compound operation over an entire 
+array, while the "Strided lazy evaluation" test performs the computation over a 3D view of a 5D array.
+The computation over a contiguous range is also compare with a standard c++ raw loop.
+
+xtensor slightly outperforms the NDArray library over a continuous range, as vectorization is 
+explicitly supported. But when iterators over array views are used, NDArray outperforms xtensor 
+by a wide margin. Moreover NDArray will not crash while performing operations of the type 
+`view_a = view_a + view_b`.
+
 # Requirements
-a c++20 compiler, like GCC 10, is required. The library uses concepts to improve readability.
- A backport to c++17 might be available in the future.
+A c++20 compiler, like GCC 10, is required. The library uses concepts to improve readability.
+A backport to c++17 might be available in the future.
  
 # Installation
 The library is headers only, and only the folder `ndarray` needs to be copied to the include path.
-Alternatively `cmake .; make; make install` will do the trick. Tests are built with cmake and
-Google's gtest and benchmark libraries. 
+Alternatively `cmake .; make; make install` will do the trick. Tests are optionally built with cmake 
+and Google's gtest and benchmark libraries. 
  
 # Examples
 Arrays are created by passing the contained type and the number of dimensions.
@@ -25,6 +42,7 @@ or through iterators. Assignments from scalars are broadcasted to the entire arr
 arr = 1; // All elements are 1.
 std::iota(arr.begin(), arr.end(), 0); // A continuos range of values 0, 1, 2... is assigned to 'arr'.
 arr(1,2,3,4) = 42; // Assignment to single location.
+std::cout << arr; // Prints the array. 
 ```
 
 ## Slicing and views
@@ -37,8 +55,8 @@ like in python. E.g `nd::range{0, -1}` takes all elements but the last one.
 
 ```
 nd::NDArray<float, 3> tensor(3,3,3); // 3D tensor
-auto m = tensor(-1, nd::all, nd::all); // 3x3 matrix with the first index of 'tensor' fixed to 2. 
-m.shape(); // Array with elements {3, 3}
+auto m = tensor(-1, nd::range{1, nd::end}, nd::all); // 2x3 matrix with the first index of 'tensor' fixed to 2. 
+m.shape(); // std::array with elements {3, 3}
 ``` 
 
 STL algorithms can be used both on arrays and views.
@@ -56,8 +74,9 @@ m(0, nd::all) = column; // assign column to row.
 
 ## Broadcasting
 Lazy evaluations of arithmetic operators `+, -, *, /` is supported between tensors
-of the same shape or scalars. The result is evaluated when assigned to an array or view. 
-The measured performance of a compound lazy evaluations is within 10% of a manually written loop. 
+of the same shape or scalars. The result is evaluated when assigned to an array or view.  
+Unlike the library xtensor, using the same view on both sides of the assignment operator 
+is correct behaviour.
 
 ```
 // Initialize A, B, C tensors of dimension >= 3 and same shape
