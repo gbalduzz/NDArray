@@ -1,32 +1,34 @@
-#include "ndarray/nd_array.hpp"
+#include <xtensor/xtensor.hpp>
+#include <xtensor/xrandom.hpp>
+#include <xtensor/xview.hpp>
 
 #include <benchmark/benchmark.h>
 #include <random>
 
 constexpr std::size_t n = 15;
-using namespace nd;
+using namespace xt;
 
 static void BM_NDArray3DSort(benchmark::State& state) {
-  NDArray<std::size_t, 5> arr_5D(n, n, 3, n, 10);
+  xtensor<std::size_t, 5> arr_5D({n, n, 3, n, 10});
   std::mt19937_64 rng(0);
   for (auto& x : arr_5D)
     x = rng();
 
   for (auto _ : state) {
-    auto view_3D = arr_5D(all, all, 2, all, 3);
+    auto view_3D = view(arr_5D, all(), all(), 2, all(), 3);
     std::sort(view_3D.begin(), view_3D.end());
   }
 }
 BENCHMARK(BM_NDArray3DSort);
 
 static void BM_3DSortBaseline(benchmark::State& state) {
-  NDArray<std::size_t, 5> arr_5D(n, n, 3, n, 10);
+  xtensor<std::size_t, 5> arr_5D({n, n, 3, n, 10});
   std::mt19937_64 rng(0);
   for (auto& x : arr_5D)
     x = rng();
 
-  auto view_3D = arr_5D(all, all, 2, all, 3);
-  std::vector<std::size_t> linearized(view_3D.length());
+  auto view_3D = view(arr_5D, all(), all(), 2, all(), 3);
+  std::vector<std::size_t> linearized(view_3D.size());
 
   for (auto _ : state) {
     std::size_t idx = 0;
@@ -49,36 +51,36 @@ BENCHMARK(BM_3DSortBaseline);
 constexpr std::size_t n1d = 1e4;
 
 static void BM_NDArray1DSort(benchmark::State& state) {
-  NDArray<std::size_t, 2> arr(n1d, 128);
+  xtensor<std::size_t, 2> arr({n1d, 128});
   std::mt19937_64 rng(0);
   for (auto& x : arr)
     x = rng();
 
-  auto view = arr(all, 4);
+  auto v = view(arr, all(), 4);
 
   for (auto _ : state) {
-    std::sort(view.begin(), view.end());
+    std::sort(v.begin(), v.end());
   }
 }
 BENCHMARK(BM_NDArray1DSort);
 
 static void BM_1DSortBaseline(benchmark::State& state) {
-  NDArray<std::size_t, 2> arr(n1d, 128);
+  xtensor<std::size_t, 2> arr({n1d, 128});
   std::mt19937_64 rng(0);
   for (auto& x : arr)
     x = rng();
 
-  auto view = arr(all, 4);
-  std::vector<std::size_t> linearized(view.length());
+  auto v = view(arr, all(), 4);
+  std::vector<std::size_t> linearized(v.size());
 
   for (auto _ : state) {
     for (int i = 0; i < n1d; ++i)
-      linearized[i] = view(i);
+      linearized[i] = v(i);
 
     std::sort(linearized.begin(), linearized.end());
 
     for (int i = 0; i < n1d; ++i)
-      view(i) = linearized[i];
+      v(i) = linearized[i];
   }
 }
 BENCHMARK(BM_1DSortBaseline);
