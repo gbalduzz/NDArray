@@ -15,39 +15,56 @@ public:
   using const_iterator = typename std::vector<T>::const_iterator;
   using value_type = T;
 
+  constexpr static bool nd_object = true;
   constexpr static bool contiguous_storage = true;
 
   NDArray() = default;
 
-  template <class... Ints>
-  requires is_complete_index<dims, Ints...> NDArray(Ints... ns) : view_{ns...} {
+  template <class... Ints> requires is_complete_index<dims, Ints...>
+  NDArray(Ints... ns) : view_{ns...} {
     data_.resize((ns * ...), {});
     view_.data_ = data_.data();
+  }
+
+  // Constructor from compound operation.
+  template <char op, class L, class R> requires contiguous_nd_storage<LazyFunction<op, L, R>>
+  NDArray(const LazyFunction<op, L, R>& f) : view_(f.shape()), data_(view_.length()) {
+    for (std::size_t i = 0; i < data_.size(); ++i)
+      data_[i] = f(i);
   }
 
   NDArray(const NDArray& rhs) {
     view_.copySize(rhs.view_);
     data_ = rhs.data_;
+    view_.data_ = data_.data();
   }
-  NDArray(NDArray&& rhs) = default;
+
+  NDArray(NDArray&& rhs) : data_(std::move(rhs.data_)){
+    view_.shallowCopy(rhs.view_);
+  }
 
   NDArray& operator=(const NDArray& rhs) {
     view_.copySize(rhs.view_);
     data_ = rhs.data_;
     return *this;
   }
-  NDArray& operator=(NDArray&& rhs) = default;
+
+  NDArray& operator=(NDArray&& rhs) {
+    view_.shallowCopy(rhs);
+    data_ = std::move(rhs.data_);
+  }
 
   NDArray& operator=(const T& rhs) {
     std::fill(data_.begin(), data_.end(), rhs);
     return *this;
   }
 
-  template <char op, class L, class R>
-  NDArray& operator=(const LazyFunction<op, L, R>&& f) {
-    for (std::size_t i = 0; i < data_.size(); ++i)
-      data_[i] = f(i);
-    return *this;
+  // Assignment from compound operation.
+  // Precondition: f has same shape.
+  template <char op, class L, class R> requires contiguous_nd_storage<LazyFunction<op, L, R>>
+  NDArray& operator=(const LazyFunction<op, L, R>& f) {
+    NDArray cpy(f);
+    return (*this) = std::move(cpy);
   }
 
   template <class... Ints>

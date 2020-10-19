@@ -20,6 +20,9 @@ public:
   using const_iterator = NDViewIterator<T, dims, true>;
   using value_type = T;
 
+  constexpr static bool nd_object = true;
+  constexpr static bool contiguous_storage = false;
+
   NDView(const NDView& rhs) = default;
   NDView(NDView&& rhs) = default;
 
@@ -30,6 +33,13 @@ public:
 
   NDView& operator=(const NDView& rhs) {
     broadcast([](int& a, int b) { a = b; }, (*this), rhs);
+    return *this;
+  }
+
+  NDView& shallowCopy(const NDView& rhs){
+    data_ = rhs.data_;
+    shape_ = rhs.shape_;
+    strides_ = rhs.strides_;
     return *this;
   }
 
@@ -137,6 +147,12 @@ private:
   template <class... Ints> requires is_complete_index<dims, Ints...>
   NDView(Ints... ns) {
     reshape(ns...);
+  }
+
+  NDView(const std::array<std::size_t, dims>& ns) : shape_(ns)  {
+    strides_.back() = 1;
+    for (int i = dimensions - 2; i >= 0; --i)
+      strides_[i] = strides_[i + 1] * shape_[i + 1];
   }
 
   template <class... Ints> requires is_complete_index<dims, Ints...>
