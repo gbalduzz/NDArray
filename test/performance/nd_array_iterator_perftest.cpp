@@ -3,7 +3,7 @@
 #include <benchmark/benchmark.h>
 #include <random>
 
-constexpr std::size_t n = 15;
+constexpr std::size_t n = 20;
 using namespace nd;
 
 static void BM_NDArray3DSort(benchmark::State& state) {
@@ -20,8 +20,8 @@ static void BM_NDArray3DSort(benchmark::State& state) {
 BENCHMARK(BM_NDArray3DSort);
 
 static void BM_3DSortBaseline(benchmark::State& state) {
-  NDArray<std::size_t, 5> arr_5D(n, n, 3, n, 10);
   std::mt19937_64 rng(0);
+  NDArray<std::size_t, 5> arr_5D(n, n, 3, n, 10);
   for (auto& x : arr_5D)
     x = rng();
 
@@ -46,7 +46,7 @@ static void BM_3DSortBaseline(benchmark::State& state) {
 }
 BENCHMARK(BM_3DSortBaseline);
 
-constexpr std::size_t n1d = 1e4;
+constexpr std::size_t n1d = n * n * n;
 
 static void BM_NDArray1DSort(benchmark::State& state) {
   NDArray<std::size_t, 2> arr(n1d, 128);
