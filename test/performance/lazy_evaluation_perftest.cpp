@@ -39,15 +39,17 @@ BENCHMARK(BM_ContiguousBaselineEvaluation);
 static void BM_NonContiguousLazyEvaluation(benchmark::State& state) {
   xt::random::seed(0);
   const auto shape = {n, n, 5ul, n, 4ul};
-  xt::xtensor<float, 3> A = xt::random::rand<float>(shape);
-  xt::xtensor<float, 3> B = xt::random::rand<float>(shape);
-  xt::xtensor<float, 3> C = xt::random::rand<float>(shape);
+  xt::xtensor<float, 5> A = xt::random::rand<float>(shape);
+  xt::xtensor<float, 5> B = xt::random::rand<float>(shape);
+  xt::xtensor<float, 5> C = xt::random::rand<float>(shape);
+
+  xt::xtensor<float, 3> result;
 
   using namespace xt;
 
   for (auto&& _ : state) {
-    view(C, all(), 0, all(), 0) = view(C, all(), 0, all(), 0) -
-                                  view(A, all(), 0, all(), 0) / (2. * view(B, all(), 0, all(), 0));
+    result = view(C, all(), all(), 0, all(), 0) -
+             view(A, all(), all(), 0, all(), 0) / (2. * view(B, all(), all(), 0, all(), 0));
   }
 }
 BENCHMARK(BM_NonContiguousLazyEvaluation);

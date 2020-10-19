@@ -5,7 +5,7 @@
 #include <benchmark/benchmark.h>
 #include <random>
 
-constexpr std::size_t n = 15;
+constexpr std::size_t n = 20;
 using namespace xt;
 
 static void BM_NDArray3DSort(benchmark::State& state) {
@@ -48,7 +48,7 @@ static void BM_3DSortBaseline(benchmark::State& state) {
 }
 BENCHMARK(BM_3DSortBaseline);
 
-constexpr std::size_t n1d = 1e4;
+constexpr std::size_t n1d = n * n * n;
 
 static void BM_NDArray1DSort(benchmark::State& state) {
   xtensor<std::size_t, 2> arr({n1d, 128});
