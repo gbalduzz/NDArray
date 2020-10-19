@@ -1,24 +1,15 @@
-#include "ndarray/nd_array.hpp"
+#include <xtensor/xtensor.hpp>
 
 #include <iostream>
 #include "gtest/gtest.h"
 
-using namespace nd;
-TEST(NDArrayTest, Concepts) {
-  EXPECT_TRUE(contiguous_nd_storage<int>);
-  EXPECT_FALSE(contiguous_nd_storage<std::ostream>);
-  EXPECT_TRUE((contiguous_nd_storage<NDArray<int, 5>>));
-  EXPECT_FALSE((contiguous_nd_storage<NDView<int, 5>>));
 
-  EXPECT_TRUE((nd_object<NDView<int, 5>>));
-  EXPECT_TRUE((nd_object<NDArray<int, 5>>));
-  EXPECT_FALSE((nd_object<int>));
-}
 
-using namespace nd;
+using namespace xt;
 TEST(LazyEvaluationTest, ArrayAssignment) {
-  NDArray<int, 3> A(5, 5, 5);
-  int val = 0;
+  xtensor<int, 3> A(5, 5, 5);
+}
+/*int val = 0;
   for (auto& x : A)
     x = val++;
 
@@ -85,3 +76,4 @@ TEST(LazyEvaluationTest, GenericUnaryFunction) {
   for (std::size_t i = 0; i < A.size(); ++i)
     EXPECT_DOUBLE_EQ(B[i], std::sqrt(A[i]));
 }
+  */
