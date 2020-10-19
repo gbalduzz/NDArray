@@ -37,8 +37,8 @@ public:
     return *this;
   }
 
-  template<char op, class L, class R>
-  NDView& operator=(const LazyFunction<op, L, R>& f){
+  template<class F, class L, class R>
+  NDView& operator=(const LazyFunction<F, L, R>& f){
     assert(shape() == f.shape());
     broadcastIndex([&](auto& x, const auto& index){x = f(index); }, *this);
     return *this;

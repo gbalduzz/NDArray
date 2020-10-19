@@ -27,13 +27,13 @@ public:
   }
 
   // Constructor from compound operation.
-  template <char op, class L, class R> requires contiguous_nd_storage<LazyFunction<op, L, R>>
-  NDArray(const LazyFunction<op, L, R>& f) : view_(f.shape()), data_(view_.length()) {
+  template <class F, class L, class R> requires contiguous_nd_storage<LazyFunction<F, L, R>>
+  NDArray(const LazyFunction<F, L, R>& f) : view_(f.shape()), data_(view_.length()) {
     for (std::size_t i = 0; i < data_.size(); ++i)
       data_[i] = f(i);
   }
-  template <char op, class L, class R> requires (!contiguous_nd_storage<LazyFunction<op, L, R>>)
-  NDArray(const LazyFunction<op, L, R>& f) : view_(f.shape()), data_(view_.length()) {
+  template <class F, class L, class R> requires (!contiguous_nd_storage<LazyFunction<F, L, R>>)
+  NDArray(const LazyFunction<F, L, R>& f) : view_(f.shape()), data_(view_.length()) {
     view_.data_ = data_.data();
     view_ = f;
   }
@@ -67,8 +67,8 @@ public:
 
   // Assignment from compound operation.
   // Precondition: f has same shape.
-  template <char op, class L, class R>
-  NDArray& operator=(const LazyFunction<op, L, R>& f) {
+  template <class F, class L, class R>
+  NDArray& operator=(const LazyFunction<F, L, R>& f) {
     NDArray cpy(f);
     return (*this) = std::move(cpy);
   }

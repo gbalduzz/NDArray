@@ -57,3 +57,31 @@ TEST(LazyEvaluationTest, ViewAssignment) {
   // Different shapes
   EXPECT_DEBUG_DEATH(A(0, range{1, end}, all) = B(all, all, 2), "Assertion.*");
 }
+
+TEST(LazyEvaluationTest, GenericBinaryFunction) {
+  NDArray<int, 3> A(3, 3, 3), B(3, 3, 3);
+  A = 1;
+  B = 1;
+
+  NDArray<std::pair<int, int>, 3> C =
+      nd::apply([](auto a, auto b) { return std::make_pair(a, b); }, A * 2, B);
+
+  for (auto x : C)
+    EXPECT_EQ(x, std::make_pair(2, 1));
+}
+
+TEST(LazyEvaluationTest, GenericUnaryFunction) {
+  NDArray<double, 3> A(3, 3, 3), B(3, 3, 3);
+  A = 1.;
+
+  const auto square = [](auto a) { return std::pow(a, 2); };
+  B = nd::apply(square, A * 2);
+
+  for (std::size_t i = 0; i < A.size(); ++i)
+    EXPECT_DOUBLE_EQ(B[i], std::pow(2. * A[i], 2));
+
+  B = nd::sqrt(A);
+
+  for (std::size_t i = 0; i < A.size(); ++i)
+    EXPECT_DOUBLE_EQ(B[i], std::sqrt(A[i]));
+}
