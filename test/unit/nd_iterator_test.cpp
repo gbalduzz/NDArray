@@ -43,6 +43,7 @@ TEST(NDIteratorTest, TwoDSort) {
   std::iota(arr.rbegin(), arr.rend(), 0);
 
   auto view = arr(all, 2, all);
+  static_assert(std::is_same_v<decltype(view), NDView<int, 2>>, "mismatch");
   std::cout << view << std::endl;
 
   ASSERT_EQ(std::distance(view.begin(), view.end()), 4 * 5);

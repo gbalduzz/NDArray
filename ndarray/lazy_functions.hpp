@@ -10,12 +10,12 @@ concept contiguous_nd_storage = std::is_scalar_v<T> ||
                                 (requires { T::contiguous_storage; } && T::contiguous_storage == true);
 
 template <class T>
-concept is_nd_object = requires { T::is_nd_object; } && T::is_nd_object == true;
+concept nd_object = requires { T::is_nd_object; } && T::is_nd_object == true;
 
 template <char op, class L, class R>
 class LazyFunction {
 public:
-  constexpr static bool nd_object = true;
+  constexpr static bool is_nd_object = true;
   constexpr static bool contiguous_storage = contiguous_nd_storage<L> && contiguous_nd_storage<R>;
 
   LazyFunction(const L& l, const R& r) : l_(l), r_(r) {}
@@ -35,10 +35,10 @@ public:
   }
 
   const auto& shape() const{
-    if constexpr (is_nd_object<L> && is_nd_object<R>) {
+    if constexpr (nd_object<L> && nd_object<R>) {
       assert(l_.shape() == r_.shape());
     }
-    if constexpr (is_nd_object<L>) {
+    if constexpr (nd_object<L>) {
       return l_.shape();
     }
     else {
@@ -64,7 +64,7 @@ public:
     return x[idx];
   }
 
-  template <class T, std::size_t dims> requires is_nd_object<T>
+  template <nd_object T, std::size_t dims>
   const auto& evaluate(const T& x, const std::array<std::size_t, dims>& idx) const {
     return x(idx);
   }
@@ -78,22 +78,25 @@ public:
   const R& r_;
 };
 
-template <class L, class R>
+template<class T>
+concept lazy_evaluated = nd_object<T> || std::is_scalar_v<T>;
+
+template <lazy_evaluated L, lazy_evaluated R>
 auto operator+(const L& l, const R& r) {
   return nd::LazyFunction<'+', L, R>(l, r);
 }
 
-template <class L, class R>
+template <lazy_evaluated L, lazy_evaluated R>
 auto operator-(const L& l, const R& r) {
   return nd::LazyFunction<'-', L, R>(l, r);
 }
 
-template <class L, class R>
+template <lazy_evaluated L, lazy_evaluated R>
 auto operator*(const L& l, const R& r) {
   return nd::LazyFunction<'*', L, R>(l, r);
 }
 
-template <class L, class R>
+template <lazy_evaluated L, lazy_evaluated R>
 auto operator/(const L& l, const R& r) {
   return nd::LazyFunction<'/', L, R>(l, r);
 }

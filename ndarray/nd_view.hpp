@@ -7,8 +7,9 @@
 #include <tuple>
 
 #include "broadcast.hpp"
-#include "ranges.hpp"
+#include "lazy_functions.hpp"
 #include "nd_view_iterator.hpp"
+#include "ranges.hpp"
 
 namespace nd {
 
@@ -20,7 +21,7 @@ public:
   using const_iterator = NDViewIterator<T, dims, true>;
   using value_type = T;
 
-  constexpr static bool nd_object = true;
+  constexpr static bool is_nd_object = true;
   constexpr static bool contiguous_storage = false;
 
   NDView(const NDView& rhs) = default;
@@ -33,6 +34,13 @@ public:
 
   NDView& operator=(const NDView& rhs) {
     broadcast([](int& a, int b) { a = b; }, (*this), rhs);
+    return *this;
+  }
+
+  template<char op, class L, class R>
+  NDView& operator=(const LazyFunction<op, L, R>& f){
+    assert(shape() == f.shape());
+    broadcastIndex([&](auto& x, const auto& index){x = f(index); }, *this);
     return *this;
   }
 
