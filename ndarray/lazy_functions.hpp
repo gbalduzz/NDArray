@@ -3,6 +3,7 @@
 #include <array>
 #include <cmath>
 #include <vector>
+#include <tuple>
 
 namespace nd {
 
@@ -11,42 +12,40 @@ concept contiguous_nd_storage = std::is_scalar_v<T> || (requires { T::contiguous
                                                         T::contiguous_storage == true);
 
 template <class T>
-concept nd_object = requires {
-  T::is_nd_object;
-}
-&&T::is_nd_object == true;
+concept nd_object = requires { T::is_nd_object; } && T::is_nd_object == true;
 
-struct Null {};
+template <class T>
+concept lazy_evaluated = nd_object<T> || std::is_scalar_v<T>;
 
-// TODO: generalize to n arguments.
-template <class F, class L, class R>
+template <class F, lazy_evaluated... Args>
 class LazyFunction {
 public:
   constexpr static bool is_nd_object = true;
-  constexpr static bool contiguous_storage = contiguous_nd_storage<L> && contiguous_nd_storage<R>;
+  constexpr static bool contiguous_storage = (contiguous_nd_storage<Args> && ...);
 
-  LazyFunction(F&& f, const L& l, const R& r) : f_(f), l_(l), r_(r) {}
+  LazyFunction(F&& f, const Args&... args) : f_(f), args_(args...) {}
 
   template <class Index>
   auto operator()(const Index& idx) const {
-    if constexpr (std::is_same_v<L, Null>)
-      return f_(evaluate(r_, idx));
-    else if constexpr (std::is_same_v<R, Null>)
-      return f_(evaluate(l_, idx));
-    else
-      return f_(evaluate(l_, idx), evaluate(r_, idx));
+    return invokeHelper(idx, std::make_index_sequence<sizeof...(Args)>{});
   }
 
   const auto& shape() const {
-    if constexpr (nd_object<L> && nd_object<R>) {
-      assert(l_.shape() == r_.shape());
-    }
-    if constexpr (nd_object<L>) {
-      return l_.shape();
-    }
-    else {
-      return r_.shape();
-    }
+    return shapeHelper<0>();
+  }
+
+private:
+  template <class Index, std::size_t... I>
+  auto invokeHelper(const Index& idx, std::index_sequence<I...>) const {
+    return f_(evaluate(std::get<I>(args_), idx)...);
+  }
+
+  template <std::size_t I>
+  const auto& shapeHelper() const {
+    if constexpr (nd_object<std::decay_t<std::tuple_element_t<I, Tuple>>>)
+      return std::get<I>(args_).shape();
+    else
+      return shapeHelper<I + 1>();
   }
 
   template <class op2, class L2, class R2>
@@ -77,21 +76,13 @@ public:
   }
 
   const F f_;
-  const L& l_;
-  const R& r_;
+  using Tuple = std::tuple<const Args&...>;
+  const Tuple args_;
 };
 
-template <class T>
-concept lazy_evaluated = nd_object<T> || std::is_scalar_v<T> || std::is_same_v<T, Null>;
-
-template <class F, lazy_evaluated L, lazy_evaluated R>
-auto apply(F&& f, const L& l, const R& r) {
-  return nd::LazyFunction<F, L, R>(std::forward<F>(f), l, r);
-}
-
-template <class F, lazy_evaluated L>
-auto apply(F&& f, const L& l) {
-  return nd::LazyFunction<F, L, Null>(std::forward<F>(f), l, Null{});
+template <class F, lazy_evaluated... Args>
+auto apply(F&& f, const Args&... args) {
+  return nd::LazyFunction<F, Args...>(std::forward<F>(f), args...);
 }
 
 template <lazy_evaluated L, lazy_evaluated R>
