@@ -9,4 +9,5 @@ if(BUILD_PERFORMANCE_TEST)
     endfunction()
 
     ndarray_add_perftest(nd_array_iterator_perftest)
+    ndarray_add_perftest(lazy_evaluation_perftest)
 endif()

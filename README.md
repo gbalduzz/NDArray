@@ -32,7 +32,7 @@ Like with python, providing a range of indices, or fixing them across some dimen
 to the original data of dimension equal or lesser. Unfortunately there is no `:` operator in c++,
 so a range will have to be provided as `nd::range{start, end}` representing the semi open interval
 `[start, end)`. The token `nd::end` is used to mark the end of the original range, and `nd::all`
-is short hand for the entire end. Selecting a negative index or range end means counting from the end,
+is short hand for the entire range. Selecting a negative index or range end means counting from the end,
 like in python. E.g `nd::range{0, -1}` takes all elements but the last one.
 
 ```
@@ -55,9 +55,17 @@ m(0, nd::all) = column; // assign column to row.
 
 
 ## Broadcasting
-Unfortunately element wise operators `+, -, *, /` are not implemented yet in such a way to lazily
-evaluate expression or fold chained operations together. Nevertheless arbitrary functions can be broadcasted
-to an arbitrary number of tensors of the same shape.
+Lazy evaluations of arithmetic operators `+, -, *, /` is supported between tensors
+of the same shape or scalars. The result is evaluated when assigned to an array or view. 
+The measured performance of a compound lazy evaluations is within 10% of a manually written loop. 
+
+```
+// Initialize A, B, C tensors of dimension >= 3 and same shape
+C(0, nd::all, nd::all) = (A(nd::all, -1, nd::all) + B(nd::all, nd::all, -1)) / 2.;
+```
+
+Alternatively arbitrary functions can be broadcasted to an arbitrary number of tensors of the same 
+shape with the `broadcast` and `broadcastIndex` functors:
 
 ```
 nd::NDArray<float, 3> A(3,3,3), B(3,3,3), C(3,3,3);
@@ -67,7 +75,6 @@ nd::broadcast([](float a, float b, float& c){ c = a * a + b;}, A, B, C);
 
 ```
 
-Alternatively the indices value can be used inside the broadcast.
 ```
 // Use the value of the indices (stored in a std::array) to perform operations.
 nd::broadcastIndex([](float& a, auto& index){ a = index[0] + index[1] + index[2];}, A);

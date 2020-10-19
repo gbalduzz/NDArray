@@ -57,6 +57,7 @@ public:
   NDArray& operator=(NDArray&& rhs) {
     view_.shallowCopy(rhs);
     data_ = std::move(rhs.data_);
+    return *this;
   }
 
   NDArray& operator=(const T& rhs) {
