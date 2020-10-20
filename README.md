@@ -13,12 +13,11 @@ features. An intel i7-7700k CPU, the GCC 10.2.0 compiler, and `-O3 -DNDEBUG` fla
 The sort tests involve sorting a 1D view of a 2D array or a 3D view of a 5D array.
 The "Contiguous lazy evaluation" involves computing and storing a compound operation over an entire 
 array, while the "Strided lazy evaluation" test performs the computation over a 3D view of a 5D array.
-The computation over a contiguous range is also compare with a standard c++ raw loop.
+The computation over a contiguous range is also compared against a standard c++ raw loop.
 
-xtensor slightly outperforms the NDArray library over a continuous range, as vectorization is 
-explicitly supported. But when iterators over array views are used, NDArray outperforms xtensor 
-by a wide margin. Moreover NDArray will not crash while performing operations of the type 
-`view_a = view_a + view_b`.
+xtensor marginally outperforms the NDArray library over a continuous range, as it explicitly  supports 
+vectorization. But when iterators over array views are used, NDArray outperforms xtensor 
+by a wide margin.
 
 # Requirements
 A c++20 compiler, like GCC 10, is required. The library uses concepts to improve readability.
