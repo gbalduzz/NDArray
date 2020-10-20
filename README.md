@@ -97,3 +97,7 @@ nd::broadcast([](float a, float b, float& c){ c = a * a + b;}, A, B, C);
 // Use the value of the indices (stored in a std::array) to perform operations.
 nd::broadcastIndex([](float& a, auto& index){ a = index[0] + index[1] + index[2];}, A);
 ```
+
+# Bound checking
+The matching of shapes during the evaluation of a lazy function, or the validity of indices and 
+ranges, is checked through assertions when the flag `-DNDEBUG` is not defined. 

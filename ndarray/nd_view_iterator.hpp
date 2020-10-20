@@ -1,3 +1,10 @@
+// Copyright (C) 2020 Giovanni Balduzzi
+// All rights reserved.
+//
+// See LICENSE for terms of usage.
+//
+// Author: Giovanni Balduzzi (gbalduzz@itp.phys.ethz.ch)
+
 #pragma once
 
 #include <array>

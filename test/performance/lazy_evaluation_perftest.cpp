@@ -1,3 +1,13 @@
+// Copyright (C) 2020 Giovanni Balduzzi
+// All rights reserved.
+//
+// See LICENSE for terms of usage.
+//
+// Author: Giovanni Balduzzi (gbalduzz@itp.phys.ethz.ch)
+//
+// Performance test of lazily evaluated compound operations. See the git branch 'xtensor_test' for
+// the equivalent test on xtensors.
+
 #include "ndarray/nd_array.hpp"
 
 #include <benchmark/benchmark.h>
