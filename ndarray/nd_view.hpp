@@ -1,3 +1,12 @@
+// Copyright (C) 2020 Giovanni Balduzzi
+// All rights reserved.
+//
+// See LICENSE for terms of usage.
+//
+// Author: Giovanni Balduzzi (gbalduzz@itp.phys.ethz.ch)
+//
+// Non-owning view of an NDArray or another view.
+
 #pragma once
 
 #include <array>

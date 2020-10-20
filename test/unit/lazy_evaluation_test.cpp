@@ -1,3 +1,12 @@
+// Copyright (C) 2020 Giovanni Balduzzi
+// All rights reserved.
+//
+// See LICENSE for terms of usage.
+//
+// Author: Giovanni Balduzzi (gbalduzz@itp.phys.ethz.ch)
+//
+// Tests unary and binary operators acing on arrays and views.
+
 #include "ndarray/nd_array.hpp"
 
 #include <iostream>
