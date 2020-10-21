@@ -48,8 +48,8 @@ public:
     return *this;
   }
 
-  template<class F, class L, class R>
-  NDView& operator=(const LazyFunction<F, L, R>& f);
+  template<class F, class... Args>
+  NDView& operator=(const LazyFunction<F, Args...>& f);
 
   NDView& shallowCopy(const NDView& rhs);
 

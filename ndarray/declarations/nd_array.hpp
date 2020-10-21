@@ -35,13 +35,8 @@ public:
     view_.data_ = data_.data();
   }
 
-  // Constructor from compound operation.
-  template <class F, lazy_evaluated... Args> requires contiguous_nd_storage<LazyFunction<F, Args...>>
-  NDArray(const LazyFunction<F, Args...>& f) : view_(f.shape()), data_(view_.length()) {
-    for (std::size_t i = 0; i < data_.size(); ++i)
-      data_[i] = f(i);
-  }
-  template <class F, lazy_evaluated... Args> requires (!contiguous_nd_storage<LazyFunction<F, Args...>>)
+
+  template <class F, lazy_evaluated... Args>
   NDArray(const LazyFunction<F, Args...>& f) : view_(f.shape()), data_(view_.length()) {
     view_.data_ = data_.data();
     view_ = f;

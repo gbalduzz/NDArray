@@ -19,8 +19,8 @@
 namespace nd {
 
 template <class T, std::size_t dims>
-template<class F, class L, class R>
-NDView<T, dims>& NDView<T, dims>::operator=(const LazyFunction<F, L, R>& f){
+template<class F, class... Args>
+NDView<T, dims>& NDView<T, dims>::operator=(const LazyFunction<F, Args...>& f){
   assert(shape() == f.shape());
   broadcastIndex([&](auto& x, const auto& index){x = f(index); }, *this);
   return *this;
