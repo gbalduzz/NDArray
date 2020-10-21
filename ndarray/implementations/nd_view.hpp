@@ -38,29 +38,17 @@ template <class T, std::size_t dims>
 template <class... Args> requires is_partial_index<dims, Args...>
 auto NDView<T, dims>::operator()(Args... args) {
   NDView<T, free_dimensions<dims, Args...>> slice;
+  slice.data_ = data_;
 
-  unsigned i = 0;
-  std::array<std::size_t, sizeof...(Args)> start{getStart(args, shape_[i++])...};
-  slice.data_ = data_ + linindex(start);
+  unsigned old_axis_id = 0;
+  unsigned new_axis_id = 0;
+  (..., (details::generateShape(args, shape_, strides_, slice.shape_, slice.strides_,
+                                slice.data_, old_axis_id, new_axis_id)));
 
-  i = 0;
-  std::array<std::size_t, sizeof...(Args)> spans{getSpan(args, shape_[i++])...};
-
-  unsigned target_d = 0;
-  unsigned local_d = 0;
-  for (; local_d < spans.size(); ++local_d) {
-    if (spans[local_d]) {
-      slice.shape_[target_d] = spans[local_d];
-      slice.strides_[target_d] = strides_[local_d];
-      ++target_d;
-    }
-  }
-
-  // Fill missing dimensions with complete range
-  for (; local_d < dimensions; ++local_d) {
-    slice.shape_[target_d] = shape_[local_d];
-    slice.strides_[target_d] = strides_[local_d];
-    ++target_d;
+  // Fill missing dimensions with complete range.
+  for (; new_axis_id < slice.shape_.size(); ++new_axis_id, ++old_axis_id) {
+    slice.shape_[new_axis_id] = shape_[old_axis_id];
+    slice.strides_[new_axis_id] = strides_[old_axis_id];
   }
 
   // TODO: check slice in debug mode.

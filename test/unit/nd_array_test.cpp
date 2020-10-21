@@ -57,6 +57,18 @@ TEST(NDArrayTest, Assignment) {
   EXPECT_EQ(t2.shape(), (std::array<std::size_t, 3>{3, 5, 4}));
 }
 
+TEST(NDArrayTest, NewAxis) {
+  NDArray<int, 2> m(2, 2);
+  NDView<int, 3> enlarged = m(newaxis, 1, newaxis, all);
+  EXPECT_EQ(enlarged.shape(), (std::array<std::size_t, 3>{1, 1, 2}));
+
+  NDView<int, 1> view = enlarged(0, 0, all);
+
+  std::iota(m.begin(), m.end(), 0);
+  for(int j = 0; j < m.shape()[1]; ++j)
+    EXPECT_EQ(m(1, j), view(j));
+}
+
 TEST(NDArrayTest, Broadcasting) {
   NDArray<int, 3> A(1, 2, 5);
   A = 1;
