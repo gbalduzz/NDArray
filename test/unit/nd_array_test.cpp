@@ -65,7 +65,7 @@ TEST(NDArrayTest, NewAxis) {
   NDView<int, 1> view = enlarged(0, 0, all);
 
   std::iota(m.begin(), m.end(), 0);
-  for(int j = 0; j < m.shape()[1]; ++j)
+  for (int j = 0; j < m.shape()[1]; ++j)
     EXPECT_EQ(m(1, j), view(j));
 }
 
@@ -85,6 +85,18 @@ TEST(NDArrayTest, Broadcasting) {
     for (int j = 0; j < A.shape()[1]; ++j)
       for (int k = 0; k < A.shape()[2]; ++k)
         EXPECT_EQ(A(i, j, k), i + j * j - k);
+}
+
+TEST(NDArrayTest, TensorProduct) {
+  NDArray<int, 2> A(3, 3);
+  NDArray<int, 2> B(3, 3);
+  NDArray<int, 4> AB(3, 3, 3, 3);
+
+  broadcast([](auto& ab, auto a, auto b) { ab = a * b; }, AB, A(all, all, newaxis, newaxis), B);
+
+  broadcastShape(
+      [&](const auto& index) { EXPECT_EQ(AB(index), A(index[0], index[1]) * B(index[2], index[3])); },
+      AB);
 }
 
 TEST(NDArrayTest, Resize) {

@@ -14,6 +14,8 @@
 #include <vector>
 #include <tuple>
 
+#include "ndarray/declarations/broadcast.hpp"
+
 namespace nd {
 
 template <class T>
@@ -21,18 +23,72 @@ concept contiguous_nd_storage = std::is_scalar_v<T> || (requires { T::contiguous
                                                         T::contiguous_storage == true);
 
 template <class T>
-concept nd_object = requires { T::is_nd_object; } && T::is_nd_object == true;
+concept nd_object = requires { T::is_nd_object; }
+                    && T::is_nd_object == true;
+
+template <class T>
+concept nd_array = requires { std::decay_t<T>::is_nd_array; }
+                   && std::decay_t<T>::is_nd_array == true;
 
 template <class T>
 concept lazy_evaluated = nd_object<T> || std::is_scalar_v<T>;
+
+template <class T>
+constexpr auto getShape(const T& t) {
+  return std::array<std::size_t, 1>{1};
+}
+
+template <nd_object T>
+const auto/*&*/ getShape(const T& t) {
+  return t.shape();
+}
+
+template <class T>
+constexpr auto getBroadcasted(const T& t) {
+  return false;
+}
+
+template <class T>
+requires requires {
+  T().broadcasted();
+}
+constexpr auto getBroadcasted(const T& t) {
+  return t.broadcasted();
+}
+
+template <class T>
+constexpr std::size_t get_dimensions = 1;
+
+template <nd_object T>
+constexpr std::size_t get_dimensions<T> = T::dimensions;
+
+namespace detail {
+template <typename T, typename F, std::size_t... Is>
+void for_each(T&& t, F f, std::index_sequence<Is...>) {
+  (f(std::get<Is>(t)), ...);
+}
+}  // namespace detail
+
+template <typename... Ts, typename F>
+void for_each_in_tuple(const std::tuple<Ts...>& t, F f) {
+  detail::for_each(t, f, std::make_index_sequence<sizeof...(Ts)>());
+}
 
 template <class F, lazy_evaluated... Args>
 class LazyFunction {
 public:
   constexpr static bool is_nd_object = true;
   constexpr static bool contiguous_storage = (contiguous_nd_storage<Args> && ...);
+  constexpr static std::size_t dimensions = pack_max<get_dimensions<std::decay_t<Args>>...>;
 
-  LazyFunction(F&& f, const Args&... args) : f_(f), args_(args...) {}
+  LazyFunction(F&& f, const Args&... args) : f_(f), args_(args...) {
+    shape_.fill(0);
+    for_each_in_tuple(args_, [&](const auto& arg) { broadcasted_|= combineShapes(shape_, getShape(arg)); });
+  }
+
+  bool broadcasted() const noexcept {
+    return broadcasted_;
+  }
 
   template <class Index>
   auto operator()(const Index& idx) const {
@@ -40,7 +96,7 @@ public:
   }
 
   const auto& shape() const {
-    return shapeHelper<0>();
+    return shape_;
   }
 
 private:
@@ -49,34 +105,19 @@ private:
     return f_(evaluate(std::get<I>(args_), idx)...);
   }
 
-  template <std::size_t I>
-  const auto& shapeHelper() const {
-    if constexpr (nd_object<std::decay_t<std::tuple_element_t<I, Tuple>>>)
-      return std::get<I>(args_).shape();
-    else
-      return shapeHelper<I + 1>();
-  }
-
-  template <class op2, class L2, class R2>
-  const auto evaluate(const LazyFunction<op2, L2, R2>& f, std::size_t idx) const {
+  template <class F2, class... Args2, class Index>
+  const auto evaluate(const LazyFunction<F2, Args2...>& f, const Index& idx) const {
     return f(idx);
   }
 
-  // TODO: collapse with previous.
-  template <class F2, class L2, class R2, std::size_t dims>
-  const auto evaluate(const LazyFunction<F2, L2, R2>& f,
-                      const std::array<std::size_t, dims>& idx) const {
-    return f(idx);
-  }
-
-  template <class T>
-  requires T::contiguous_storage const auto& evaluate(const T& x, std::size_t idx) const {
+  template <nd_array T>
+  auto evaluate(const T& x, std::size_t idx) const {
     return x[idx];
   }
 
-  template <nd_object T, std::size_t dims>
-  const auto& evaluate(const T& x, const std::array<std::size_t, dims>& idx) const {
-    return x(idx);
+  template <nd_object T, class Index>
+  const auto& evaluate(const T& x, const Index& idx) const {
+    return x.extendedElement(idx);
   }
 
   template <class T, class Idx>
@@ -87,6 +128,8 @@ private:
   const F f_;
   using Tuple = std::tuple<const Args&...>;
   const Tuple args_;
+  std::array<std::size_t, dimensions> shape_;
+  bool broadcasted_ = false;
 };
 
 template <class F, lazy_evaluated... Args>

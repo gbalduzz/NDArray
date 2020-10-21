@@ -26,6 +26,7 @@ public:
 
   constexpr static bool is_nd_object = true;
   constexpr static bool contiguous_storage = true;
+  constexpr static bool is_nd_array = true;
 
   NDArray() = default;
 
@@ -35,12 +36,21 @@ public:
     view_.data_ = data_.data();
   }
 
-  // Constructor from compound operation.
-  template <class F, lazy_evaluated... Args> requires contiguous_nd_storage<LazyFunction<F, Args...>>
+
+  template <class F, lazy_evaluated... Args> requires (contiguous_nd_storage<LazyFunction<F, Args...>>)
   NDArray(const LazyFunction<F, Args...>& f) : view_(f.shape()), data_(view_.length()) {
-    for (std::size_t i = 0; i < data_.size(); ++i)
-      data_[i] = f(i);
+    view_.data_ = data_.data();
+
+    if(!f.broadcasted()) {
+      for (std::size_t i = 0; i < data_.size(); ++i) {
+        data_[i] = f(i);
+      }
+    }
+    else {
+      view_ = f;
+    }
   }
+
   template <class F, lazy_evaluated... Args> requires (!contiguous_nd_storage<LazyFunction<F, Args...>>)
   NDArray(const LazyFunction<F, Args...>& f) : view_(f.shape()), data_(view_.length()) {
     view_.data_ = data_.data();
@@ -125,6 +135,15 @@ public:
   }
   const T& operator()(const std::array<std::size_t, dims>& ns) const noexcept {
     return view_(ns);
+  }
+
+  template<std::size_t id_size>
+  T& extendedElement(const std::array<std::size_t, id_size>& ns) noexcept {
+    return view_.extendedElement(ns);
+  }
+  template<std::size_t id_size>
+  const T& extendedElement(const std::array<std::size_t, id_size>& ns) const noexcept {
+    return view_.extendedElement(ns);
   }
 
   // Return views.
