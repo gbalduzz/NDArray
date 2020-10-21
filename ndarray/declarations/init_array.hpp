@@ -12,7 +12,7 @@
 #include <type_traits>
 #include <random>
 
-#include "nd_array_core.hpp"
+#include "ndarray/declarations/nd_array.hpp"
 
 namespace nd {
 

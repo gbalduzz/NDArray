@@ -9,7 +9,11 @@
 
 #pragma once
 
-#include "broadcast.hpp"
-#include "init_array.hpp"
-#include "lazy_functions.hpp"
-#include "nd_array.hpp"
+#include "declarations/broadcast.hpp"
+#include "declarations/init_array.hpp"
+#include "declarations/lazy_functions.hpp"
+#include "declarations/nd_array.hpp"
+#include "declarations/nd_view.hpp"
+
+#include "implementations/nd_view.hpp"
+#include "implementations/nd_view_iterator.hpp"
