@@ -129,8 +129,4 @@ std::size_t NDViewIterator<T, dims, is_const>::linindex() const noexcept {
   return idx;
 }
 
-template <class T, bool is_const>
-NDViewIterator<T, 1, is_const>::NDViewIterator(CondConst<NDView<T, 1>&> view, const char pos)
-: data_(view.data_), index_(pos == 'e' ? view.shape_[0] : 0), stride_(view.strides_[0]) {}
-
 }  // namespace nd
