@@ -126,6 +126,23 @@ std::size_t NDView<T, dims>::linindex(const std::array<std::size_t, id_size>& id
 }
 
 template <class T, std::size_t dims>
+template<std::size_t id_size> requires (id_size >= dims)
+std::size_t NDView<T, dims>::linindexExtended(const std::array<std::size_t, id_size>& ids) const noexcept {
+  constexpr std::size_t dim_shift = id_size - dims;
+
+  std::size_t lid = 0;
+  for (std::size_t i = 0; i < shape_.size(); ++i) {
+    if(shape_[i] > 1) {
+      const auto index = ids[i + dim_shift];
+      assert(index < shape_[i]);
+      lid += index * strides_[i];
+    }
+  }
+
+  return lid;
+}
+
+template <class T, std::size_t dims>
 void NDView<T, dims>::copySize(const NDView& rhs) {
   shape_ = rhs.shape_;
   strides_ = rhs.strides_;

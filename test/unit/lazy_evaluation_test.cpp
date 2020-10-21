@@ -64,7 +64,7 @@ TEST(LazyEvaluationTest, ViewAssignment) {
     EXPECT_EQ(x, 0);
 
   // Different shapes
-  EXPECT_DEBUG_DEATH(A(0, range{1, end}, all) = B(all, all, 2), "Assertion.*");
+  EXPECT_THROW(A(0, range{1, end}, all) = B(all, all, 2), std::invalid_argument);
 }
 
 TEST(LazyEvaluationTest, GenericBinaryFunction) {

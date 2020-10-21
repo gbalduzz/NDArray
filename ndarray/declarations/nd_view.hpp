@@ -93,6 +93,15 @@ public:
     return const_view;
   }
 
+  // Access methods for broadcasting operations. Dimensions with size 1 or past the end are ignored.
+  template <std::size_t id_dim>
+  const T& extendedElement(const std::array<std::size_t, id_dim>& index) const noexcept {
+    return data_[linindexExtended(index)];
+  }
+  template <std::size_t id_dim>
+  T& extendedElement(const std::array<std::size_t, id_dim>& index) noexcept {
+    return data_[linindexExtended(index)];
+  }
   auto inline begin() noexcept -> iterator;
   auto inline begin() const noexcept -> const_iterator;
   auto inline cbegin() const noexcept -> const_iterator;
@@ -124,12 +133,15 @@ private:
   template <class... Ints> requires is_complete_index<dims, Ints...>
   void reshape(Ints... ns);
 
-  template <class... Ints>
-  requires is_complete_index<dims, Ints...> ||
-           is_partial_index<dims, Ints...> std::size_t linindex(Ints... ids) const noexcept;
+  template <class... Ints> requires is_complete_index<dims, Ints...> ||
+                                    is_partial_index<dims, Ints...> std::size_t
+  linindex(Ints... ids) const noexcept;
 
   template<std::size_t id_size> requires (id_size <= dims)
   std::size_t linindex(const std::array<std::size_t, id_size>& ids) const noexcept;
+
+  template<std::size_t id_size> requires (id_size >= dims)
+  std::size_t linindexExtended(const std::array<std::size_t, id_size>& ids) const noexcept;
 
   void copySize(const NDView& rhs);
 

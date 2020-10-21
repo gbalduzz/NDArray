@@ -127,6 +127,15 @@ public:
     return view_(ns);
   }
 
+  template<std::size_t id_size>
+  T& extendedElement(const std::array<std::size_t, id_size>& ns) noexcept {
+    return view_.extendedElement(ns);
+  }
+  template<std::size_t id_size>
+  const T& extendedElement(const std::array<std::size_t, id_size>& ns) const noexcept {
+    return view_.extendedElement(ns);
+  }
+
   // Return views.
   template <class... Args>
   requires is_partial_index<dims, Args...> auto operator()(Args&&... ns) noexcept {
