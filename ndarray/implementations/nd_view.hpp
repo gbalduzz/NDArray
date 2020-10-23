@@ -85,7 +85,7 @@ auto NDView<T, dims>::cend() const noexcept -> const_iterator {
 template <class T, std::size_t dims>
 NDView<T, dims>::NDView(const std::array<std::size_t, dims>& ns) : shape_(ns)  {
   strides_.back() = 1;
-  for (int i = dimensions - 2; i >= 0; --i)
+  for (int i = int(dimensions) - 2; i >= 0; --i)
     strides_[i] = strides_[i + 1] * shape_[i + 1];
 }
 

@@ -23,8 +23,8 @@ concept contiguous_nd_storage = std::is_scalar_v<T> || (requires { T::contiguous
                                                         T::contiguous_storage == true);
 
 template <class T>
-concept nd_object = requires { T::is_nd_object; }
-                    && T::is_nd_object == true;
+concept nd_object = requires { std::decay_t<T>::is_nd_object; }
+                    && std::decay_t<T>::is_nd_object == true;
 
 template <class T>
 concept nd_array = requires { std::decay_t<T>::is_nd_array; }

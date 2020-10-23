@@ -94,3 +94,18 @@ TEST(LazyEvaluationTest, GenericUnaryFunction) {
   for (std::size_t i = 0; i < A.size(); ++i)
     EXPECT_DOUBLE_EQ(B[i], std::sqrt(A[i]));
 }
+
+TEST(LazyEvaluationTest, MakeTensor) {
+  NDArray<double, 3> A(4, 4, 4), B(4, 4, 4);
+  auto C = makeTensor(A(all, 0, all) * B(0, all, all) / 2);
+  static_assert(std::is_same_v<typename decltype(C)::value_type, double>, "value type mismatch");
+
+  EXPECT_EQ(C.shape(), (std::array<std::size_t, 2>{4, 4}));
+
+  auto view = A(range{0, -2}, -1, -1);
+  auto D = makeTensor(view);
+  EXPECT_EQ(D.shape(), (std::array<std::size_t, 1>{2}));
+
+  auto E = makeTensor(A(range{1, end}, -1, all));
+  EXPECT_EQ(E.shape(), (std::array<std::size_t, 2>{3, 4}));
+}

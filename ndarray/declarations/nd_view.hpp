@@ -44,7 +44,7 @@ public:
   }
 
   NDView& operator=(const NDView& rhs) {
-    broadcast([](int& a, int b) { a = b; }, (*this), rhs);
+    broadcast([](T& a, T b) { a = b; }, (*this), rhs);
     return *this;
   }
 

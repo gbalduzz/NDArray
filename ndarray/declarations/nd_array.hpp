@@ -36,6 +36,10 @@ public:
     view_.data_ = data_.data();
   }
 
+  NDArray(const std::array<std::size_t, dims>& shape) : view_(shape) {
+    data_.resize(view_.length(), {});
+    view_.data_ = data_.data();
+  }
 
   template <class F, lazy_evaluated... Args> requires (contiguous_nd_storage<LazyFunction<F, Args...>>)
   NDArray(const LazyFunction<F, Args...>& f) : view_(f.shape()), data_(view_.length()) {
@@ -61,6 +65,10 @@ public:
     view_.copySize(rhs.view_);
     data_ = rhs.data_;
     view_.data_ = data_.data();
+  }
+
+  NDArray(const NDView<T, dims>& view) : NDArray(view.shape()) {
+    view_ = view;
   }
 
   NDArray(NDArray&& rhs) : data_(std::move(rhs.data_)){
@@ -188,6 +196,13 @@ private:
   NDView<T, dims> view_;
   std::vector<T> data_;
 };
+
+template<nd_object T>
+auto makeTensor(T&& view_or_func){
+  constexpr std::size_t dims = std::decay_t<T>::dimensions;
+  using Val = std::decay_t<decltype(view_or_func(std::array<std::size_t, dims>{}))>;
+  return NDArray<Val, dims>(std::forward<T>(view_or_func));
+}
 
 }  // namespace nd
 
