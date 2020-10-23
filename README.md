@@ -70,17 +70,36 @@ Views and arrays of the same shape can be assigned to each other.
 m(0, nd::all) = column; // assign column to row.
 ```
 
+The token `nd::newaxis` can be used to obtain a view of higher dimension than the original array.
+The new axis have length of 1.
+```
+nd::NDArray<int, 2> m(3,5);
+nd::NDView<int, 4> m_view = m(nd::all, nd::newaxis, nd::all, nd::newaxis);
+```
+ 
 
 ## Broadcasting
 Lazy evaluations of arithmetic operators `+, -, *, /` is supported between tensors
-of the same shape or scalars. The result is evaluated when assigned to an array or view.  
-Unlike the library xtensor, using the same view on both sides of the assignment operator 
-is correct behaviour.
+of the same shape, scalars, and tensors whose shape is broadcastable with the same rules as `numpy`. 
+The result is evaluated when assigned to an array or view.  
+
 
 ```
-// Initialize A, B, C tensors of dimension >= 3 and same shape
+// Initialize A, B, C tensors of dimension >= 3 and compatible shape
 C(0, nd::all, nd::all) = (A(nd::all, -1, nd::all) + B(nd::all, nd::all, -1)) / 2.;
 ```
+
+```
+// compute tensor product of two matrices
+using namespace nd;
+NDArray<float, 2> A(3, 3);
+NDArray<float, 2> B(3, 3);
+NDArray<float, 4> AB;
+
+AB = A(all, all, newaxis, newaxis) * B;
+```
+
+
 
 Alternatively arbitrary functions can be broadcasted to an arbitrary number of tensors of the same 
 shape with the `broadcast` and `broadcastIndex` functors:
