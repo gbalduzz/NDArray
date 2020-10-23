@@ -22,7 +22,10 @@ template <class T, std::size_t dims>
 template<class F, class... Args>
 NDView<T, dims>& NDView<T, dims>::operator=(const LazyFunction<F, Args...>& f){
   assert(shape() == f.shape());
-  broadcastIndex([&](auto& x, const auto& index){x = f(index); }, *this);
+  if(!f.broadcasted())
+    broadcastShape([&](const auto& index){(*this)(index) = f(index); }, shape_);
+  else
+    broadcastShape([&](const auto& index){extendedElement(index) = f.extendedElement(index); }, shape_);
   return *this;
 }
 

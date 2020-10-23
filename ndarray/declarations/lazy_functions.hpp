@@ -39,7 +39,7 @@ constexpr auto getShape(const T& t) {
 }
 
 template <nd_object T>
-const auto/*&*/ getShape(const T& t) {
+const auto& getShape(const T& t) {
   return t.shape();
 }
 
@@ -49,9 +49,7 @@ constexpr auto getBroadcasted(const T& t) {
 }
 
 template <class T>
-requires requires {
-  T().broadcasted();
-}
+requires requires { T().broadcasted(); }
 constexpr auto getBroadcasted(const T& t) {
   return t.broadcasted();
 }
@@ -62,16 +60,13 @@ constexpr std::size_t get_dimensions = 1;
 template <nd_object T>
 constexpr std::size_t get_dimensions<T> = T::dimensions;
 
-namespace detail {
-template <typename T, typename F, std::size_t... Is>
-void for_each(T&& t, F f, std::index_sequence<Is...>) {
-  (f(std::get<Is>(t)), ...);
-}
-}  // namespace detail
-
 template <typename... Ts, typename F>
-void for_each_in_tuple(const std::tuple<Ts...>& t, F f) {
-  detail::for_each(t, f, std::make_index_sequence<sizeof...(Ts)>());
+void for_each_in_tuple(const std::tuple<Ts...>& t, F&& f) {
+  auto for_each = []<std::size_t... Is>(auto&& t, auto&& f, std::index_sequence<Is...>) {
+    (std::forward<F>(f)(std::get<Is>(t)), ...);
+  };
+
+  for_each(t, std::forward<F>(f), std::make_index_sequence<sizeof...(Ts)>());
 }
 
 template <class F, lazy_evaluated... Args>
@@ -95,6 +90,11 @@ public:
     return invokeHelper(idx, std::make_index_sequence<sizeof...(Args)>{});
   }
 
+  template <class Index>
+  auto extendedElement(const Index& idx) const {
+    return invokeExtendedHelper(idx, std::make_index_sequence<sizeof...(Args)>{});
+  }
+
   const auto& shape() const {
     return shape_;
   }
@@ -105,9 +105,9 @@ private:
     return f_(evaluate(std::get<I>(args_), idx)...);
   }
 
-  template <class F2, class... Args2, class Index>
-  const auto evaluate(const LazyFunction<F2, Args2...>& f, const Index& idx) const {
-    return f(idx);
+  template <class Index, std::size_t... I>
+  auto invokeExtendedHelper(const Index& idx, std::index_sequence<I...>) const {
+    return f_(evaluateExtended(std::get<I>(args_), idx)...);
   }
 
   template <nd_array T>
@@ -116,12 +116,24 @@ private:
   }
 
   template <nd_object T, class Index>
-  const auto& evaluate(const T& x, const Index& idx) const {
+  auto evaluate(const T& x, const Index& idx) const {
+    return x(idx);
+  }
+
+  template <nd_object T, class Index>
+  auto evaluateExtended(const T& x, const Index& idx) const {
     return x.extendedElement(idx);
   }
 
   template <class T, class Idx>
-  requires std::is_scalar_v<T> const auto& evaluate(const T& x, const Idx& /*idx*/) const {
+  requires std::is_scalar_v<T>
+  auto evaluate(const T& x, const Idx& /*idx*/) const {
+    return x;
+  }
+
+  template <class T, class Idx>
+  requires std::is_scalar_v<T>
+  auto evaluateExtended(const T& x, const Idx& /*idx*/) const {
     return x;
   }
 

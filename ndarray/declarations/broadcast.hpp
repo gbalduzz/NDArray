@@ -147,4 +147,5 @@ void broadcastShape(F&& f, const T& tensor) {
   broadcastShape(std::forward<F>(f), tensor.shape());
 }
 
+
 }  // namespace nd

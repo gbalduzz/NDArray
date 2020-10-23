@@ -45,6 +45,7 @@ static void BM_ContiguousBaselineEvaluation(benchmark::State& state) {
 }
 
 BENCHMARK(BM_ContiguousBaselineEvaluation);
+
 static void BM_NonContiguousLazyEvaluation(benchmark::State& state) {
   nd::seed(0);
   auto A = rand<float>(n, n, 5ul, n, 4ul);
@@ -57,3 +58,16 @@ static void BM_NonContiguousLazyEvaluation(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_NonContiguousLazyEvaluation);
+
+static void BM_BroadcastingLazyEvaluation(benchmark::State& state) {
+  nd::seed(0);
+  auto A = rand<float>(1, n, 5ul, n, 4ul);
+  auto B = rand<float>(n, 1, 5ul, n, 4ul);
+  auto C = rand<float>(n, n, 5ul, 1, 4ul);
+  auto res = NDArray<float, 3>(n, n, n);
+
+  for (auto _ : state) {
+    res = C(all, all, 0, all, 0) - A(all, all, 0, all, 0) / (2. * B(all, all, 0, all, 0));
+  }
+}
+BENCHMARK(BM_BroadcastingLazyEvaluation);
