@@ -21,19 +21,16 @@ concept contiguous_nd_storage = std::is_scalar_v<T> || (requires { T::contiguous
                                                         T::contiguous_storage == true);
 
 template <class T>
-concept nd_object = requires { T::is_nd_object; } && T::is_nd_object == true;
+concept nd_object = requires { std::decay_t<T>::is_nd_object; } &&
+                    std::decay_t<T>::is_nd_object == true;
 
 template <class T>
 concept lazy_evaluated = nd_object<T> || std::is_scalar_v<T>;
 
 template <class T>
-constexpr std::size_t getDimensions(){
-  return 1;
-}
+constexpr std::size_t dimensions = 1;
 template <nd_object T>
-constexpr std::size_t getDimensions(){
-  return T::dimensions;
-}
+constexpr std::size_t dimensions<T> = T::dimensions;
 
 
 template<std::size_t n1, std::size_t... ns>
@@ -46,8 +43,7 @@ class LazyFunction {
 public:
   constexpr static bool is_nd_object = true;
   constexpr static bool contiguous_storage = (contiguous_nd_storage<Args> && ...);
-  constexpr static std::size_t dimensions = pack_max<getDimensions<Args>()...>;
-
+  constexpr static std::size_t dimensions = pack_max<dimensions<Args>...>;
   LazyFunction(F&& f, const Args&... args) : f_(f), args_(args...) {}
 
   template <class Index>

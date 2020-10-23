@@ -26,6 +26,7 @@ template <class T, std::size_t dims>
 class NDView {
 public:
   constexpr static std::size_t dimensions = dims;
+
   using iterator = NDViewIterator<T, dims, false>;
   using const_iterator = NDViewIterator<T, dims, true>;
   using value_type = T;
@@ -42,7 +43,7 @@ public:
   }
 
   NDView& operator=(const NDView& rhs) {
-    broadcast([](int& a, int b) { a = b; }, (*this), rhs);
+    broadcast([](T& a, T b) { a = b; }, (*this), rhs);
     return *this;
   }
 
@@ -168,7 +169,7 @@ private:
 
   NDView(const std::array<std::size_t, dims>& ns) : shape_(ns)  {
     strides_.back() = 1;
-    for (int i = dimensions - 2; i >= 0; --i)
+    for (int i = int(dimensions) - 2; i >= 0; --i)
       strides_[i] = strides_[i + 1] * shape_[i + 1];
   }
 
