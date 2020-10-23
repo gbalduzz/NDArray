@@ -94,3 +94,10 @@ TEST(LazyEvaluationTest, GenericUnaryFunction) {
   for (std::size_t i = 0; i < A.size(); ++i)
     EXPECT_DOUBLE_EQ(B[i], std::sqrt(A[i]));
 }
+
+TEST(LazyEvaluationTest, MakeTensor) {
+  NDArray<double, 3> A(3, 3, 3), B(3, 3, 3);
+  auto C = makeTensor(A(all, 0, all) * B(0, all, all) / 2.);
+
+  EXPECT_EQ(C.shaep(), (std::array<std::size_t, 2>{3,3}));
+}

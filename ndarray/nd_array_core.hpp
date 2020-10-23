@@ -170,6 +170,13 @@ private:
   std::vector<T> data_;
 };
 
+template<nd_object T>
+auto makeTensor(T&& view_or_func){
+  constexpr std::size_t dims = T::dimensions;
+  using Val = T::value_type;
+  return NDArray<Val, dims>(std::forward<T>(view_or_func));
+}
+
 }  // namespace nd
 
 template <class T, std::size_t n>

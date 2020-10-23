@@ -26,11 +26,27 @@ concept nd_object = requires { T::is_nd_object; } && T::is_nd_object == true;
 template <class T>
 concept lazy_evaluated = nd_object<T> || std::is_scalar_v<T>;
 
+template <class T>
+constexpr std::size_t getDimensions(){
+  return 1;
+}
+template <nd_object T>
+constexpr std::size_t getDimensions(){
+  return T::dimensions;
+}
+
+
+template<std::size_t n1, std::size_t... ns>
+constexpr auto pack_max = std::max(n1, pack_max<ns...>);
+template<std::size_t n1>
+constexpr auto pack_max<n1> = n1;
+
 template <class F, lazy_evaluated... Args>
 class LazyFunction {
 public:
   constexpr static bool is_nd_object = true;
   constexpr static bool contiguous_storage = (contiguous_nd_storage<Args> && ...);
+  constexpr static std::size_t dimensions = pack_max<getDimensions<Args>()...>;
 
   LazyFunction(F&& f, const Args&... args) : f_(f), args_(args...) {}
 
