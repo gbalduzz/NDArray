@@ -27,6 +27,9 @@ constexpr bool pack_equal = ((I1 == Is) && ...);
 template <std::size_t n1, std::size_t n2> requires(n1 >= n2)
 bool combineShapes(std::array<std::size_t, n1>& s1,
                    const std::array<std::size_t, n2>& s2) {
+  if constexpr (n2 == 0){ // Scalar needs not broadcast an index.
+    return false;
+  }
   constexpr std::size_t shift = n1 - n2;
   bool broadcasted = n1 != n2;
   for (unsigned i = 0; i < n2; ++i) {

@@ -35,7 +35,7 @@ concept lazy_evaluated = nd_object<T> || std::is_scalar_v<T>;
 
 template <class T>
 constexpr auto getShape(const T& t) {
-  return std::array<std::size_t, 1>{1};
+  return std::array<std::size_t, 0>{};
 }
 
 template <nd_object T>
@@ -78,7 +78,10 @@ public:
 
   LazyFunction(F&& f, const Args&... args) : f_(f), args_(args...) {
     shape_.fill(0);
-    for_each_in_tuple(args_, [&](const auto& arg) { broadcasted_|= combineShapes(shape_, getShape(arg)); });
+
+    for_each_in_tuple(args_, [&](const auto& arg) {
+      broadcasted_ |= getBroadcasted(args_) || combineShapes(shape_, getShape(arg));
+    });
   }
 
   bool broadcasted() const noexcept {
