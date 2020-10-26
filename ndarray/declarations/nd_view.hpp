@@ -132,6 +132,7 @@ private:
 
   template <class... Ints> requires is_complete_index<dims, Ints...>
   void reshape(Ints... ns);
+  void reshape(const std::array<std::size_t, dims>& ns);
 
   template <class... Ints> requires is_complete_index<dims, Ints...> ||
                                     is_partial_index<dims, Ints...> std::size_t

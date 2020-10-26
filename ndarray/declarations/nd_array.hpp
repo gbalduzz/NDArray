@@ -11,6 +11,7 @@
 
 #include <vector>
 
+#include "brace_initialization.hpp"
 #include "lazy_functions.hpp"
 #include "nd_view.hpp"
 
@@ -37,6 +38,16 @@ public:
 
   NDArray(const std::array<std::size_t, dims>& shape) : view_(shape) {
     data_.resize(view_.length(), {});
+    view_.data_ = data_.data();
+  }
+
+  NDArray(NDInitializer<T, dims> elements) {
+    std::array<std::size_t, dims> shape;
+    shape.fill(0);
+
+    readData(data_, shape, elements);
+
+    view_.reshape(shape);
     view_.data_ = data_.data();
   }
 
@@ -203,9 +214,9 @@ auto makeTensor(T&& view_or_func){
   return NDArray<Val, dims>(std::forward<T>(view_or_func));
 }
 
-}  // namespace nd
-
 template <class T, std::size_t n>
 std::ostream& operator<<(std::ostream& s, const nd::NDArray<T, n>& arr) {
   return s << static_cast<nd::NDView<const T, n>>(arr);
 }
+
+}  // namespace nd

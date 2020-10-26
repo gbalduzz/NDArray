@@ -95,9 +95,14 @@ NDView<T, dims>::NDView(const std::array<std::size_t, dims>& ns) : shape_(ns)  {
 template <class T, std::size_t dims>
 template <class... Ints> requires is_complete_index<dims, Ints...>
 void NDView<T, dims>::reshape(Ints... ns) {
-  shape_ = {std::size_t(ns)...};
+  reshape(std::array<std::size_t, dims>{static_cast<std::size_t>(ns)...});
+}
+
+template <class T, std::size_t dims>
+void NDView<T, dims>::reshape(const std::array<std::size_t, dims>& ns) {
+  shape_ = ns;
   strides_.back() = 1;
-  for (int i = dimensions - 2; i >= 0; --i)
+  for (int i = static_cast<int>(dimensions) - 2; i >= 0; --i)
     strides_[i] = strides_[i + 1] * shape_[i + 1];
 }
 

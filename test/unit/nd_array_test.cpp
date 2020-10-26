@@ -22,6 +22,19 @@ TEST(NDArrayTest, Shape) {
   EXPECT_EQ(arr_view.shape(), (std::array<std::size_t, 3>{3, 5, 1}));
 }
 
+TEST(NDArrayTest, ListInitialization) {
+  NDArray<int, 3> arr{{{1, 2}, {3, 4}, {5, 6}}};
+  EXPECT_EQ(arr.shape(), (std::array<std::size_t, 3>{1, 3, 2}));
+
+  int val = 1;
+  for (auto x : arr) {
+    EXPECT_EQ(x, val++);
+  }
+
+  // Can not build with non (hyper) rectangular data.
+  EXPECT_THROW((NDArray<int, 2>{{1, 2, 3}, {3, 4}}), std::invalid_argument);
+}
+
 TEST(NDArrayTest, Indexing) {
   NDArray<int, 3> arr(3, 2, 4);
   EXPECT_EQ(arr(0, 0, 1), 0);

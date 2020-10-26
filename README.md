@@ -33,6 +33,10 @@ Arrays are created by passing the contained type and the number of dimensions.
 ```
 nd::NDArray<int, 4> arr(5, 5, 5, 5); // Creates a 4D dimensional array of integer with 5^4 elements. 
 ```  
+Alternatively a brace initialization list with every element can be used:
+```
+nd::NDArray<int, 2> matrix{{0, 1}, {2, 3}, {4, 5}};
+```
 
 values can be accessed either by index,  `[]` for the linear index, `()` for Cartesian index, 
 or through iterators. Assignments from scalars are broadcasted to the entire array.
