@@ -26,7 +26,6 @@ public:
 
   constexpr static bool is_nd_object = true;
   constexpr static bool contiguous_storage = true;
-  constexpr static bool is_nd_array = true;
 
   NDArray() = default;
 
@@ -47,7 +46,7 @@ public:
 
     if(!f.broadcasted()) {
       for (std::size_t i = 0; i < data_.size(); ++i) {
-        data_[i] = f(i);
+        data_[i] = f[i];
       }
     }
     else {

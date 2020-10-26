@@ -27,10 +27,6 @@ concept nd_object = requires { std::decay_t<T>::is_nd_object; }
                     && std::decay_t<T>::is_nd_object == true;
 
 template <class T>
-concept nd_array = requires { std::decay_t<T>::is_nd_array; }
-                   && std::decay_t<T>::is_nd_array == true;
-
-template <class T>
 concept lazy_evaluated = nd_object<T> || std::is_scalar_v<T>;
 
 template <class T>
@@ -88,13 +84,17 @@ public:
     return broadcasted_;
   }
 
-  template <class Index>
-  auto operator()(const Index& idx) const {
+  auto operator()(const std::array<std::size_t, dimensions>& idx) const {
     return invokeHelper(idx, std::make_index_sequence<sizeof...(Args)>{});
   }
 
-  template <class Index>
-  auto extendedElement(const Index& idx) const {
+  auto operator[](std::size_t idx) const {
+    static_assert(contiguous_storage, "operator [] not defined for views");
+    return invokeHelper(idx, std::make_index_sequence<sizeof...(Args)>{});
+  }
+
+  template <std::size_t idx_size>
+  auto extendedElement(const std::array<std::size_t, idx_size>& idx) const {
     return invokeExtendedHelper(idx, std::make_index_sequence<sizeof...(Args)>{});
   }
 
@@ -113,7 +113,7 @@ private:
     return f_(evaluateExtended(std::get<I>(args_), idx)...);
   }
 
-  template <nd_array T>
+  template <nd_object T> requires contiguous_nd_storage<T>
   auto evaluate(const T& x, std::size_t idx) const {
     return x[idx];
   }
