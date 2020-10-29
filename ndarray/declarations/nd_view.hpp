@@ -13,6 +13,7 @@
 #include <cassert>
 #include <ostream>
 #include <numeric>
+#include <ranges>
 #include <tuple>
 
 #include "ndarray/declarations/broadcast.hpp"
@@ -155,3 +156,6 @@ template <class T, std::size_t n>
 std::ostream& operator<<(std::ostream& s, const nd::NDView<T, n>& view);
 
 }  // namespace nd
+
+template<class T, std::size_t n>
+inline constexpr bool std::ranges::enable_borrowed_range<nd::NDView<T, n>> = true;

@@ -76,6 +76,8 @@ auto NDViewIterator<T, dims, is_const>::operator-(const NDViewIterator& rhs) con
 
 template <class T, std::size_t dims, bool is_const>
 NDViewIterator<T, dims, is_const>& NDViewIterator<T, dims, is_const>::operator+=(difference_type n) {
+  if(n < 0) return (*this) -= - n;
+
   index_.back() += n;
   const auto& shape = view_->shape_;
 
@@ -92,6 +94,8 @@ NDViewIterator<T, dims, is_const>& NDViewIterator<T, dims, is_const>::operator+=
 
 template <class T, std::size_t dims, bool is_const>
 NDViewIterator<T, dims, is_const>& NDViewIterator<T, dims, is_const>::operator-=(difference_type n) {
+  if(n < 0) return (*this) += -n;
+
   const auto& shape = view_->shape_;
 
   index_.back() -= n;

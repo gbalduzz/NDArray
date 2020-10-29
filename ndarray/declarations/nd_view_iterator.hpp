@@ -47,6 +47,12 @@ public:
   pointer operator->() {
     return data() + linindex();
   }
+  reference operator[](std::size_t n){
+    return *(*this + n);
+  }
+  const reference operator[](std::size_t n) const {
+    return *(*this + n);
+  }
 
   NDViewIterator& operator++();
 
@@ -97,5 +103,20 @@ private:
   std::array<long int, dims> index_;
   CondConst<NDView<T, dims>*> view_ = nullptr;
 };
+
+
+template <class T, std::size_t dims, bool is_const>
+NDViewIterator<T, dims, is_const> operator+(
+    long int n,
+    const NDViewIterator<T, dims, is_const>& it) {
+  return it + n;
+}
+
+template <class T, std::size_t dims, bool is_const>
+NDViewIterator<T, dims, is_const> operator-(
+    long int n,
+    const NDViewIterator<T, dims, is_const>& it) {
+  return it - n;
+}
 
 }  // namespace nd

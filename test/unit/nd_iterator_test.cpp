@@ -10,17 +10,22 @@
 #include "ndarray/nd_array.hpp"
 
 #include "gtest/gtest.h"
+
+#include <algorithm>
 #include <iostream>
 #include <numeric>
+#include <ranges>
 
 using namespace nd;
+namespace ranges = std::ranges;
+
 TEST(NDIteratorTest, OneDView) {
   NDArray<int, 2> arr(4, 4);
   std::iota(arr.begin(), arr.end(), 0);
 
   auto view = arr(all, 1);
   // set col 1 to zero
-  std::fill(view.begin(), view.end(), 0);
+  ranges::fill(view, 0);
 
   int linindex = 0;
   for (int i = 0; i < arr.shape()[0]; ++i)
@@ -57,7 +62,7 @@ TEST(NDIteratorTest, TwoDSort) {
 
   ASSERT_EQ(std::distance(view.begin(), view.end()), 4 * 5);
 
-  std::sort(view.begin(), view.end());
+  ranges::sort(view);
   std::cout << view;
 
   std::vector<int> values;
