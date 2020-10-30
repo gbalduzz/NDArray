@@ -109,3 +109,15 @@ TEST(LazyEvaluationTest, MakeTensor) {
   auto E = makeTensor(A(range{1, end}, -1, all));
   EXPECT_EQ(E.shape(), (std::array<std::size_t, 2>{3, 4}));
 }
+
+TEST(LazyEvaluationTest, DanglingFunction) {
+  auto A = nd::ones<float>(2, 5);
+  auto B = nd::ones<float>(2, 5, 7);
+
+  auto f = A * 2. + B(all, all, -1);
+
+  NDArray<float, 2> C(2, 5);
+  C = f;
+
+  EXPECT_EQ(C[0], 3);
+}

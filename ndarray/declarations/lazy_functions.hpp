@@ -29,6 +29,13 @@ concept nd_object = requires { std::decay_t<T>::is_nd_object; }
 template <class T>
 concept lazy_evaluated = nd_object<T> || std::is_scalar_v<T>;
 
+template<class T, std::size_t dims>
+class NDArray;
+template<class T>
+constexpr bool is_nd_array = false;
+template<class T, std::size_t dims>
+constexpr bool is_nd_array<NDArray<T, dims>> = true;
+
 template <class T>
 constexpr auto getShape(const T& t) {
   return std::array<std::size_t, 0>{};
@@ -140,8 +147,12 @@ private:
     return x;
   }
 
+  // Copy views and scalars by value, NDArrays by const reference.
+  template<class T>
+  using LazyArgument = std::conditional_t<is_nd_array<T>, const T&, T>;
+
   const F f_;
-  using Tuple = std::tuple<const Args&...>;
+  using Tuple = std::tuple<LazyArgument<Args>...>;
   const Tuple args_;
   std::array<std::size_t, dimensions> shape_;
   bool broadcasted_ = false;
