@@ -157,5 +157,6 @@ std::ostream& operator<<(std::ostream& s, const nd::NDView<T, n>& view);
 
 }  // namespace nd
 
+// The iterator has a pointer to a view. Dangling is not safe.
 template<class T, std::size_t n>
-inline constexpr bool std::ranges::enable_borrowed_range<nd::NDView<T, n>> = true;
+inline constexpr bool std::ranges::enable_borrowed_range<nd::NDView<T, n>> = false;
