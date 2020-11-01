@@ -165,22 +165,22 @@ auto apply(F&& f, const Args&... args) {
 
 template <lazy_evaluated L, lazy_evaluated R>
 auto operator+(const L& l, const R& r) {
-  return apply([](const auto& a, const auto& b) { return a + b; }, l, r);
+  return apply(std::plus<>(), l, r);
 }
 
 template <lazy_evaluated L, lazy_evaluated R>
 auto operator-(const L& l, const R& r) {
-  return apply([](const auto& a, const auto& b) { return a - b; }, l, r);
+  return apply(std::minus<>(), l, r);
 }
 
 template <lazy_evaluated L, lazy_evaluated R>
 auto operator*(const L& l, const R& r) {
-  return apply([](const auto& a, const auto& b) { return a * b; }, l, r);
+  return apply(std::multiplies<>(), l, r);
 }
 
 template <lazy_evaluated L, lazy_evaluated R>
 auto operator/(const L& l, const R& r) {
-  return apply([](const auto& a, const auto& b) { return a / b; }, l, r);
+  return apply(std::divides<>(), l, r);
 }
 
 template <lazy_evaluated L>
