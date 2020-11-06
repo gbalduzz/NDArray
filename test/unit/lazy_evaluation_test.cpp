@@ -67,6 +67,22 @@ TEST(LazyEvaluationTest, ViewAssignment) {
   EXPECT_DEBUG_DEATH(A(0, range{1, end}, all) = B(all, all, 2), ".*Assert");
 }
 
+TEST(LazyEvaluationTest, ViewAssignment2) {
+  auto A = rand<double>(3, 5, 6, 4, 12);
+  auto B = rand<double>(3, 5, 4);
+  auto C = rand<double>(3, 5, 6, 4, 12);
+  auto Ccpy = C;
+
+  C(all, all, 0, all, 0) =
+      3 * C(all, all, 0, all, 0) - A(all, all, 0, all, 0) / (2. * B);
+
+  for (int i = 0; i < 3; ++i)
+    for (int j = 0; j < 5; ++j)
+      for (int k = 0; k < 4; ++k)
+        EXPECT_EQ(3. * Ccpy(i, j, 0, k, 0) - A(i, j, 0, k, 0) / (2. * B(i, j, k)),
+                  C(i, j, 0, k, 0));
+}
+
 TEST(LazyEvaluationTest, GenericBinaryFunction) {
   NDArray<int, 3> A(3, 3, 3), B(3, 3, 3);
   A = 1;
