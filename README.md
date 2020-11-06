@@ -6,7 +6,7 @@ random access iterators.
 # Benchmark
 The performance of the library  is evaluated against 
 [xtensor](https://github.com/xtensor-stack/xtensor), a well established library with similar 
-features. An intel i7-7700k CPU, the GCC 10.2.0 compiler, and `-O3 -DNDEBUG` flags were used. 
+features. An intel i7-7700k CPU, the GCC 10.2.0 compiler, and `-O3 -DNDEBUG -march=native` flags were used. 
 
 ![benchmark](figures/benchmark.png)
 
@@ -15,8 +15,8 @@ The "Contiguous lazy evaluation" involves computing and storing a compound opera
 array, while the "Strided lazy evaluation" test performs the computation over a 3D view of a 5D array.
 The computation over a contiguous range is also compared against a standard c++ raw loop.
 
-xtensor marginally outperforms the NDArray library over a continuous range, as it explicitly  supports 
-vectorization. But when iterators over array views are used, NDArray outperforms xtensor 
+The performance of the two library is similar when evaluating functions over entire arrays stored
+contiguously in memory, but when iterators over array views are used, NDArray outperforms xtensor 
 by a wide margin.
 
 # Requirements
