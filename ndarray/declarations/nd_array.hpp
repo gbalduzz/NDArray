@@ -31,14 +31,23 @@ public:
   NDArray() = default;
 
   template <class... Ints> requires is_complete_index<dims, Ints...>
-  NDArray(Ints... ns) : view_{ns...} {
-    data_.resize((ns * ...), {});
+  NDArray(Ints... ns) {
+    reshape(ns...);
+  }
+
+  NDArray(const std::array<std::size_t, dims>& shape) {
+    reshape(shape);
+  }
+
+  void reshape(const std::array<std::size_t, dims>& shape){
+    view_.reshape(shape);
+    data_.resize(view_.length(), {});
     view_.data_ = data_.data();
   }
 
-  NDArray(const std::array<std::size_t, dims>& shape) : view_(shape) {
-    data_.resize(view_.length(), {});
-    view_.data_ = data_.data();
+  template <class... Ints> requires is_complete_index<dims, Ints...>
+  void reshape(Ints... ns){
+    reshape(std::array<std::size_t, dims>{static_cast<std::size_t>(ns)...});
   }
 
   NDArray(NDInitializer<T, dims> elements) {
@@ -104,17 +113,27 @@ public:
 
   // Assignment from compound operation.
   // Precondition: f has same shape.
-  template <class F, lazy_evaluated... Args>
+  template <class F, lazy_evaluated... Args> requires (!contiguous_nd_storage<LazyFunction<F, Args...>>)
   NDArray& operator=(const LazyFunction<F, Args...>& f) {
     NDArray cpy(f);
     return (*this) = std::move(cpy);
   }
+  template <class F, lazy_evaluated... Args> requires (contiguous_nd_storage<LazyFunction<F, Args...>>)
+  NDArray& operator=(const LazyFunction<F, Args...>& f) {
+    if(shape() != f.shape()){
+      reshape(f.shape());
+    }
 
-  template <class... Ints>
-  requires is_complete_index<dims, Ints...> void reshape(Ints... ns) {
-    view_.reshape(ns...);
-    data_.resize((ns * ...), {});
-    view_.data_ = data_.data();
+    if(!f.broadcasted()) {
+      for (std::size_t i = 0; i < data_.size(); ++i) {
+        data_[i] = f[i];
+      }
+    }
+    else{
+      view_ = f;
+    }
+
+    return *this;
   }
 
   std::size_t length() const noexcept {
